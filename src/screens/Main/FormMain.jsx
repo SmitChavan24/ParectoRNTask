@@ -380,7 +380,7 @@ const FormMain = () => {
           mt="1"
           margin={10}
           colorScheme="indigo"
-          onPress={() => console.log('goo')}>
+          onPress={() => tempNavigation.navigate('home')}>
           Sign up
         </Button>
       </ScrollView>
