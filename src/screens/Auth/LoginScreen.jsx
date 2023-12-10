@@ -26,10 +26,13 @@ const LoginScreen = ({route}) => {
     email: false,
     password: false,
   });
-  const {email} = route.params;
+  const email = route?.params?.email;
 
   useEffect(() => {
-    existUser(email);
+    if (email) {
+      console.log('email', email);
+      existUser(email);
+    }
   }, [email]);
 
   const existUser = async email => {
@@ -116,7 +119,7 @@ const LoginScreen = ({route}) => {
                 color="coolGray.600"
                 fontWeight="medium"
                 size="xs">
-                Sign in to continue!
+                Log in to continue!
               </Heading>
 
               <VStack space={3} mt="5">
@@ -152,7 +155,10 @@ const LoginScreen = ({route}) => {
                   disabled={login.email && login.password ? false : true}
                   mt="2"
                   style={{
-                    backgroundColor: login.email && login.password ? "indigo" :'rgba(153, 153, 153, 0.05)',
+                    backgroundColor:
+                      login.email && login.password
+                        ? 'indigo'
+                        : 'rgba(153, 153, 153, 0.05)',
                     borderWidth: 1,
                     borderColor: 'grey',
                   }}

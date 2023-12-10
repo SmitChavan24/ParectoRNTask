@@ -7,7 +7,9 @@ import {
   Image,
   ActivityIndicator,
   Dimensions,
+  Touchable,
   TouchableOpacity,
+  TextInput,
 } from 'react-native';
 import {
   Box,
@@ -26,11 +28,15 @@ import {
   Stack,
   Select,
   CheckIcon,
+  Pressable,
+  Spacer,
+  Flex,
+  Badge,
 } from 'native-base';
 import React, {useRef, useState, useEffect} from 'react';
 import paddingHelper from '../../utils/paddingHelper';
 import globalColors from '../../utils/globalColors';
-import {launchImageLibrary,launchCamera} from 'react-native-image-picker';
+import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {
@@ -41,60 +47,66 @@ import {
   request,
 } from 'react-native-permissions';
 
-const {width, height} = Dimensions.get('window');
 import {useNavigation} from '@react-navigation/native';
 const FormMain = () => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const [formData, setData] = React.useState({});
-  const [groupValue, setGroupValue] = React.useState([
-    'male',
-    'female',
-    'other',
-  ]);
-  const [customInput, setCustomInput] = useState('');
-  const [selectedValue, setSelectedValue] = useState(null);
+  const [data, setData] = useState({
+    firstname: '',
+    lastname: '',
+    dob: '',
+    gender: '',
+    city: '',
+    imageuri: '',
+    checker: false,
+    datePicker: false,
+  });
+  const [error, setError] = useState({
+    firstname: false,
+    lastname: false,
+    dob: false,
+    gender: false,
+    city: false,
+    imageuri: false,
+    checker: false,
+  });
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageData, setImageData] = useState(null);
   const storageKey = '@myApp:imageData';
   const tempNavigation = useNavigation();
-  
-
-  const scrollViewRef = useRef(null);
-
 
   useEffect(() => {
-    // requestCameraPermission();
+    requestCameraPermission();
+  }, []);
+
+  useEffect(() => {
+    getImageFromStorage();
   }, []);
 
   const requestCameraPermission = async () => {
     try {
       const permissionStatus = await check(
-        Platform.OS === 'ios'
-          ? PERMISSIONS.IOS.CAMERA
-          : PERMISSIONS.ANDROID.CAMERA
+        // Platform.OS === 'ios'? PERMISSIONS.IOS.CAMERA:
+        PERMISSIONS.ANDROID.CAMERA,
       );
-  
+
       if (permissionStatus === RESULTS.GRANTED) {
         // Camera permission already granted
-        // Your code for using the camera goes here
       } else if (permissionStatus === RESULTS.DENIED) {
         // Camera permission has not been granted
         const newStatus = await request(
-          Platform.OS === 'ios'
-            ? PERMISSIONS.IOS.CAMERA
-            : PERMISSIONS.ANDROID.CAMERA
+          // Platform.OS === 'ios'? PERMISSIONS.IOS.CAMERA :
+          PERMISSIONS.ANDROID.CAMERA,
         );
         handlePermissionResponse(newStatus);
       } else {
-        // Permission denied or blocked
         handlePermissionResponse(permissionStatus);
       }
     } catch (error) {
       console.error('Error checking/requesting camera permission:', error);
     }
   };
-  
-  const handlePermissionResponse = (status) => {
+
+  const handlePermissionResponse = status => {
     if (status === RESULTS.GRANTED) {
       // Permission granted, you can use the camera now
     } else if (status === RESULTS.DENIED) {
@@ -110,7 +122,7 @@ const FormMain = () => {
             text: 'Open Settings',
             onPress: () => openSettings(),
           },
-        ]
+        ],
       );
     } else {
       // Permission denied or blocked
@@ -121,13 +133,12 @@ const FormMain = () => {
           {
             text: 'OK',
           },
-        ]
+        ],
       );
     }
   };
-  
 
-  const clickImage = async() => {
+  const clickImage = async () => {
     const options = {
       mediaType: 'photo',
       maxHeight: 2000,
@@ -135,7 +146,7 @@ const FormMain = () => {
       saveToPhotos: false,
       includeBase64: true,
     };
-  
+
     launchCamera(options, response => {
       if (response.didCancel) {
         console.log('User cancelled camera');
@@ -147,9 +158,8 @@ const FormMain = () => {
         console.log(imageUri);
       }
     });
-
-  }
-  const pickImage = async() => {
+  };
+  const pickImage = async () => {
     const options = {
       mediaType: 'photo',
       includeBase64: false,
@@ -157,7 +167,7 @@ const FormMain = () => {
       maxWidth: 2000,
     };
 
-    launchImageLibrary(options, (response) => {
+    launchImageLibrary(options, response => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
       } else if (response.error) {
@@ -188,30 +198,91 @@ const FormMain = () => {
     }
   };
 
-  useEffect(() => {
-    getImageFromStorage();
-  }, []);
+  // const onSubmitForm = (data) => {
+  // }
+  const onSubmitForm = () => {
+    let hasErrors = false;
 
-  const handleSelectChange = value => {
-    setSelectedValue(value);
+    // Resetting errors
+    setError({
+      firstname: false,
+      lastname: false,
+      dob: false,
+      gender: false,
+      city: false,
+      imageuri: false,
+      checker: false,
+    });
+
+    // Validate First Name
+    if (!data.firstname && data.firstname.length < 3) {
+      setError(prevError => ({...prevError, firstname: true}));
+      hasErrors = true;
+    }
+
+    // Validate Last Name
+    if (!data.lastname && data.lastname.length < 3) {
+      setError(prevError => ({...prevError, lastname: true}));
+      hasErrors = true;
+    }
+
+    // Validate Date of Birth
+    if (!data.dob) {
+      setError(prevError => ({...prevError, dob: true}));
+      hasErrors = true;
+    }
+
+    // Validate Gender
+    if (!data.gender) {
+      setError(prevError => ({...prevError, gender: true}));
+      hasErrors = true;
+    }
+
+    // Validate City
+    if (!data.city) {
+      setError(prevError => ({...prevError, city: true}));
+      hasErrors = true;
+    }
+
+    // Validate Image URI
+    if (!selectedImage) {
+      setError(prevError => ({...prevError, imageuri: true}));
+      hasErrors = true;
+    }
+
+    // Validate Checkbox
+    if (!data.checker) {
+      setError(prevError => ({...prevError, checker: true}));
+      hasErrors = true;
+    }
+
+    // If there are errors, do not proceed
+    if (hasErrors) {
+      return;
+    }
+
+    // Continue with the form submission logic
+    // ...
+    // You can save the data, navigate to the next screen, or perform other actions here
   };
 
-  const handleInputChange = text => {
-    setSelectedValue(null);
-    setCustomInput(text);
-  };
-
+  // date- picker functions
   const showDatePicker = () => {
-    setDatePickerVisibility(true);
+    setData({...data, datePicker: true});
   };
-
   const hideDatePicker = () => {
-    setDatePickerVisibility(false);
+    setData({...data, datePicker: false});
   };
-
   const handleConfirm = date => {
-    console.warn('A date has been picked: ', date);
-    hideDatePicker();
+    let options = {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+    };
+    const formattedDate = date.toLocaleString('en-US', options);
+
+    setData({...data, dob: formattedDate, datePicker: false});
+    // hideDatePicker();
   };
 
   return (
@@ -245,10 +316,10 @@ const FormMain = () => {
                 }}
                 fontWeight="medium"
                 size="xs">
-                Fill up to continue!
+                Fill up the form to continue!
               </Heading>
               <VStack space={5} mt="5">
-                <FormControl isRequired>
+                <FormControl isRequired isInvalid={error.firstname}>
                   <FormControl.Label
                     _text={{
                       bold: true,
@@ -256,23 +327,23 @@ const FormMain = () => {
                     First Name
                   </FormControl.Label>
                   <Input
-                    placeholder="John"
-                    onChangeText={value => setData({...formData, name: value})}
+                    placeholder=" first name"
+                    onChangeText={value => setData({...data, firstname: value})}
                   />
                   <FormControl.HelperText
                     _text={{
                       fontSize: 'xs',
                     }}>
-                    Name should contain atleast 3 character.
+                    First Name should contain atleast 3 character.
                   </FormControl.HelperText>
                   <FormControl.ErrorMessage
                     _text={{
                       fontSize: 'xs',
                     }}>
-                    Error Name
+                    Error First Name
                   </FormControl.ErrorMessage>
                 </FormControl>
-                <FormControl isRequired>
+                <FormControl isRequired isInvalid={error.lastname}>
                   <FormControl.Label
                     _text={{
                       bold: true,
@@ -280,32 +351,40 @@ const FormMain = () => {
                     Last Name
                   </FormControl.Label>
                   <Input
-                    placeholder="John"
-                    onChangeText={value => setData({...formData, name: value})}
+                    placeholder="last name"
+                    onChangeText={value => setData({...data, lastname: value})}
                   />
                   <FormControl.HelperText
                     _text={{
                       fontSize: 'xs',
                     }}>
-                    Name should contain atleast 3 character.
+                    Last Name should contain atleast 3 character.
                   </FormControl.HelperText>
                   <FormControl.ErrorMessage
                     _text={{
                       fontSize: 'xs',
                     }}>
-                    Error Name
+                    Error Last Name
                   </FormControl.ErrorMessage>
                 </FormControl>
-                {/* <Button title="Show Date Picker" onPress={showDatePicker} /> */}
-                {/* 
-                <DateTimePickerModal
-                  isVisible={isDatePickerVisible}
-                  mode="date"
-                  onConfirm={handleConfirm}
-                  onCancel={hideDatePicker}
-                /> */}
+                <FormControl maxW="300" isRequired isInvalid={error.dob}>
+                  <FormControl.Label>Choose Date of Birth</FormControl.Label>
+                  <TextInput
+                    style={{
+                      borderWidth: 2,
+                      borderColor: 'rgba(153, 153, 153, 0.2)',
+                      borderRadius: 5,
+                    }}
+                    placeholder={'date'}
+                    onPressIn={() => showDatePicker()}>
+                    <Text>{data.dob}</Text>
+                  </TextInput>
+                  <FormControl.ErrorMessage>
+                    Please make a selection!
+                  </FormControl.ErrorMessage>
+                </FormControl>
 
-                <FormControl isInvalid isRequired>
+                <FormControl isInvalid={error.gender} isRequired>
                   <FormControl.Label
                     _text={{
                       bold: true,
@@ -315,10 +394,11 @@ const FormMain = () => {
                   <Radio.Group
                     name="genderGroup"
                     accessibilityLabel="select gender"
-                    defaultValue={groupValue}
-                    onChange={value => {
-                      setGroupValue(value || '');
-                    }}>
+                    // defaultValue='male'
+                    // onChange={value => setData({...data, gender: value})}
+                    onChange={value =>
+                      setData(prevData => ({...prevData, gender: value}))
+                    }>
                     <Stack
                       direction={{
                         base: 'row',
@@ -338,7 +418,7 @@ const FormMain = () => {
                         Female
                       </Radio>
                       <Radio value="other" my="1">
-                        other
+                        Other
                       </Radio>
                     </Stack>
                   </Radio.Group>
@@ -346,74 +426,134 @@ const FormMain = () => {
                     You must select a gender.
                   </FormControl.ErrorMessage>
                 </FormControl>
-                {/* <FormControl maxW="300" isRequired isInvalid>
+                <FormControl maxW="300" isRequired isInvalid={error.city}>
                   <FormControl.Label>Choose City</FormControl.Label>
                   <Select
                     minWidth="200"
-                    accessibilityLabel="Choose Service"
-                    placeholder="Choose Service"
+                    accessibilityLabel="Choose City"
+                    placeholder="Choose City"
                     _selectedItem={{
                       bg: 'teal.600',
                       endIcon: <CheckIcon size={5} />,
                     }}
+                    onValueChange={value => setData({...data, city: value})}
                     mt="1">
-                    <Select.Item label="UX Research" value="ux" />
-                    <Select.Item label="Web Development" value="web" />
+                    <Select.Item label="Mumbai" value="mumbai" />
                     <Select.Item
-                      label="Cross Platform Development"
-                      value="cross"
+                      label="Mumbai Suburban"
+                      value="mumbai suburban"
                     />
-                    <Select.Item label="UI Designing" value="ui" />
-                    <Select.Item label="Backend Development" value="backend" />
+                    <Select.Item label="Navi Mumbai" value="navi mumbai" />
+                    <Select.Item label="Delhi" value="delhi" />
+                    <Select.Item label="Bengaluru" value="bengaluru" />
+                    <Select.Item label="Hyderabad" value="hyderabad" />
+                    <Select.Item label="Ahmedabad" value="ahmedabad" />
                   </Select>
                   <FormControl.ErrorMessage>
                     Please make a selection!
                   </FormControl.ErrorMessage>
-                </FormControl> */}
+                </FormControl>
+
+                <FormControl maxW="300" isRequired isInvalid={error.imageuri}>
+                  <FormControl.Label>
+                    Select your profile image
+                  </FormControl.Label>
+                  <View style={{flexDirection: 'row'}}>
+                    <Pressable
+                      onPress={pickImage}
+                      rounded="8"
+                      overflow="hidden"
+                      borderWidth="1"
+                      borderColor="coolGray.300"
+                      maxW="40%"
+                      shadow="3"
+                      bg="coolGray.100"
+                      p="1">
+                      <Box>
+                        <HStack alignItems="center">
+                          <Badge
+                            colorScheme="darkBlue"
+                            _text={{
+                              color: 'white',
+                            }}
+                            variant="solid"
+                            rounded="4">
+                            Pick Image From Gallery
+                          </Badge>
+                          <Spacer />
+                        </HStack>
+                      </Box>
+                    </Pressable>
+                    <Pressable
+                      onPress={clickImage}
+                      rounded="8"
+                      overflow="hidden"
+                      borderWidth="1"
+                      borderColor="coolGray.300"
+                      maxW="40%"
+                      shadow="3"
+                      bg="coolGray.100"
+                      p="1">
+                      <Box>
+                        <HStack alignItems="center">
+                          <Badge
+                            colorScheme="darkBlue"
+                            _text={{
+                              color: 'white',
+                            }}
+                            variant="solid"
+                            rounded="4">
+                            Click Image From Camera
+                          </Badge>
+                          <Spacer />
+                        </HStack>
+                      </Box>
+                    </Pressable>
+                  </View>
+                  <FormControl.ErrorMessage>
+                    Please make a selection!
+                  </FormControl.ErrorMessage>
+                </FormControl>
               </VStack>
             </Box>
           </Center>
         </View>
-        <Button title="Pick Image From Gallery" onPress={pickImage} />
-        <Button title="Click Image From Camera" onPress={clickImage} />
-        <Button
-          mt="1"
-          margin={10}
-          colorScheme="indigo"
-          onPress={() => tempNavigation.navigate('home')}>
-          Sign up
-        </Button>
+        <DateTimePickerModal
+          isVisible={data.datePicker}
+          mode="date"
+          maximumDate={new Date()}
+          minimumDate={new Date(1700, 0, 1)}
+          onConfirm={handleConfirm}
+          onCancel={hideDatePicker}
+        />
       </ScrollView>
+      <FormControl maxW="300" isRequired isInvalid={error.checker}>
+      {/* <FormControl.ErrorMessage marginLeft="20%">Please agree!</FormControl.ErrorMessage>
+   */}
+        <Checkbox
+          isChecked={data.checker}
+          colorScheme="green"
+          marginX={8}
+          marginY={2}
+          borderWidth={2}
+          onPress={her => setData({...data, checker: !data.checker})}>
+          <Heading
+            mt="1"
+            _dark={{
+              color: 'warmGray.200',
+            }}
+            color="coolGray.600"
+            fontWeight="medium"
+            size="xs">
+            I agree that mentioned details are correct as per my knowledge
+          </Heading>
+        </Checkbox>
+           </FormControl>
+      <Button mt="1" margin={5} colorScheme="indigo" onPress={onSubmitForm}>
+        Submit
+      </Button>
     </View>
   );
 };
 
 export default FormMain;
-
-const styles = StyleSheet.create({
-  button: {
-    width: '90%',
-    height: (height * 6) / 100,
-    backgroundColor: '#44226E',
-    alignSelf: 'center',
-    borderRadius: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderColor: 'rgba(228, 228, 228, 0.9)',
-    marginBottom: '10%',
-    marginTop: '5%',
-  },
-  buttontext: {
-    fontFamily: globalColors.fontSemiBold,
-    fontSize: (width * 4) / 100,
-    lineHeight: 20,
-    letterSpacing: 0.3,
-  },
-  timeFlex: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-  },
-  subText: {width: '47%', justifyContent: 'center', alignItems: 'center'},
-});
