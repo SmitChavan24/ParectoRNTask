@@ -17,7 +17,7 @@ import {
   Button,
   HStack,
   Center,
-  useToast
+  useToast,
 } from 'native-base';
 import React, {useEffect, useState} from 'react';
 import {useNavigation, useIsFocused} from '@react-navigation/native';
@@ -68,7 +68,7 @@ const LoginScreen = ({route}) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     let regex = emailRegex.test(login.email);
     if (!regex || login.password.trim().length < 6) {
-      setError({email: true,password:true});
+      setError({email: true, password: true});
     } else {
       let asyncresult = await AsyncStorage.getItem(login.email);
       if (!asyncresult) {
@@ -80,14 +80,14 @@ const LoginScreen = ({route}) => {
           let homeasync = await AsyncStorage.getItem(homeasyncdata);
           if (homeasync) {
             setlogin({});
-            setError({})
+            setError({});
             tempNavigation.navigate('home', {email: asyncresult.email});
           } else {
             setlogin({});
-            setError({})
+            setError({});
             tempNavigation.navigate('form', {email: asyncresult.email});
           }
-        }else{
+        } else {
           setError({password: true});
         }
         return 0;
@@ -184,7 +184,9 @@ const LoginScreen = ({route}) => {
                 </FormControl>
 
                 <Button
-                  disabled={login.email && login?.password?.length > 5? false : true}
+                  disabled={
+                    login.email && login?.password?.length > 5 ? false : true
+                  }
                   mt="2"
                   style={{
                     backgroundColor:
@@ -212,7 +214,10 @@ const LoginScreen = ({route}) => {
                       fontWeight: 'medium',
                       fontSize: 'sm',
                     }}
-                    onPress={() => tempNavigation.navigate('register')}>
+                    onPress={() => {
+                      setError({});
+                      tempNavigation.navigate('register');
+                    }}>
                     Sign Up
                   </Link>
                 </HStack>
