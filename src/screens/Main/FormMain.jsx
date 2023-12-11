@@ -602,7 +602,7 @@ const FormMain = ({route}) => {
           );
         }}>
         <Popover.Content accessibilityLabel="Delete Customerd" w="56">
-          <Popover.CloseButton />
+          <Popover.CloseButton onPress={()=>setPopoverOpen(false)} />
           <Popover.Header>Confirmation Box</Popover.Header>
           <Popover.Body>
             Confirm it! ,Do you really want to submit these detail.
