@@ -1,4 +1,4 @@
-import {StyleSheet, View, StatusBar, ScrollView, Platform,Dimensions} from 'react-native';
+import {StyleSheet, View, StatusBar, ScrollView, Platform,Dimensions,BackHandler} from 'react-native';
 import {
   Box,
   Text,
@@ -32,7 +32,6 @@ const HomeScreen = ({route}) => {
     
   },[])
   const getDatafromStorage =  async () => { 
-
      let newkeyemail = dataemail.current+".UserData"
     let asyncresult = await AsyncStorage.getItem(newkeyemail);
       asyncresult=JSON.parse(asyncresult)
@@ -52,7 +51,7 @@ const HomeScreen = ({route}) => {
         },
       ]}>
         <Avatar bg="green.500" source={{
-      uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
+         uri: data.imageuri
     }} size={"2xl"} alignSelf={"center"} margin={"5%"}>
         AJ
       </Avatar>

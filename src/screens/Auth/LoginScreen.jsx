@@ -1,4 +1,11 @@
-import {StyleSheet, View, StatusBar, ScrollView, Platform} from 'react-native';
+import {
+  StyleSheet,
+  View,
+  StatusBar,
+  ScrollView,
+  Platform,
+  BackHandler,
+} from 'react-native';
 import {
   Box,
   Text,
@@ -10,14 +17,16 @@ import {
   Button,
   HStack,
   Center,
+  useToast
 } from 'native-base';
 import React, {useEffect, useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useIsFocused} from '@react-navigation/native';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = ({route}) => {
   const tempNavigation = useNavigation();
+  const isFocused = useIsFocused();
   const [login, setlogin] = useState({
     email: '',
     password: '',
@@ -27,13 +36,24 @@ const LoginScreen = ({route}) => {
     password: false,
   });
   const email = route?.params?.email;
-
   useEffect(() => {
     if (email) {
-      console.log('email', email);
       existUser(email);
     }
   }, [email]);
+
+  const backAction = () => {
+    BackHandler.exitApp();
+  };
+  useEffect(() => {
+    if (isFocused) {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction,
+      );
+      return () => backHandler.remove();
+    }
+  }, [isFocused]);
 
   const existUser = async email => {
     let asyncresult = await AsyncStorage.getItem(email);
@@ -47,23 +67,28 @@ const LoginScreen = ({route}) => {
   const validateInputs = async data => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     let regex = emailRegex.test(login.email);
-    if (!regex) {
-      setError({email: true});
+    if (!regex || login.password.trim().length < 6) {
+      setError({email: true,password:true});
     } else {
       let asyncresult = await AsyncStorage.getItem(login.email);
-      if (!asyncresult || login.password.trim().length < 6) {
-        setError({password: true});
+      if (!asyncresult) {
+        setError({email: true});
       } else {
         asyncresult = JSON.parse(asyncresult);
         if (asyncresult.password === login.password) {
-         let homeasyncdata = asyncresult.email+".UserData"
+          let homeasyncdata = asyncresult.email + '.UserData';
           let homeasync = await AsyncStorage.getItem(homeasyncdata);
-          if(homeasync){
-            setlogin({})
-            tempNavigation.navigate('home',{ email: asyncresult.email });
-          }else{
-            tempNavigation.navigate('form',{ email: asyncresult.email });
+          if (homeasync) {
+            setlogin({});
+            setError({})
+            tempNavigation.navigate('home', {email: asyncresult.email});
+          } else {
+            setlogin({});
+            setError({})
+            tempNavigation.navigate('form', {email: asyncresult.email});
           }
+        }else{
+          setError({password: true});
         }
         return 0;
       }
@@ -140,7 +165,7 @@ const LoginScreen = ({route}) => {
                     _text={{
                       fontSize: 'xs',
                     }}>
-                    email is not valid.
+                    Invalid Username
                   </FormControl.ErrorMessage>
                 </FormControl>
                 <FormControl isInvalid={errorfield.password}>
@@ -154,16 +179,16 @@ const LoginScreen = ({route}) => {
                     _text={{
                       fontSize: 'xs',
                     }}>
-                    password is not valid.
+                    Invalid Password
                   </FormControl.ErrorMessage>
                 </FormControl>
 
                 <Button
-                  disabled={login.email && login.password ? false : true}
+                  disabled={login.email && login?.password?.length > 5? false : true}
                   mt="2"
                   style={{
                     backgroundColor:
-                      login.email && login.password
+                      login.email && login?.password?.length > 5
                         ? 'indigo'
                         : 'rgba(153, 153, 153, 0.05)',
                     borderWidth: 1,
