@@ -16,6 +16,8 @@ if (__DEV__) {
     'of type BVLinearGradient has a shadow set but cannot calculate shadow efficiently.',
     '(ADVICE) View #1339 of type BVLinearGradient has a shadow set but cannot calculate shadow efficiently.',
     'In React 18, SSRProvider is not necessary and is a noop. You can remove it from your app.',
+    'VirtualizedLists should never be nested',
+    // 'Missing "NSCameraUsageDescription" property in "Info.plist'
   ];
 
   const warn = console.warn;

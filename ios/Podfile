@@ -5,8 +5,12 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
+require_relative '../node_modules/react-native-permissions/scripts/setup'
+
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
+
+
 
 # If you are using a `react-native-flipper` your iOS build will fail when `NO_FLIPPER=1` is set.
 # because `react-native-flipper` depends on (FlipperKit,...) that will be excluded
@@ -60,3 +64,29 @@ target 'Peracto' do
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
   end
 end
+  
+  
+  # ⬇️ uncomment wanted permissions
+setup_permissions([
+  #  'AppTrackingTransparency',
+  #  'Bluetooth',
+  #  'Calendars',
+  # 'CalendarsWriteOnly',
+   'Camera',
+  #  'Contacts',
+  #  'FaceID',
+  #  'LocationAccuracy',
+  #  'LocationAlways',
+  #  'LocationWhenInUse',
+  #  'MediaLibrary',
+  #  'Microphone',
+  #  'Motion',
+  #  'Notifications',
+  #  'PhotoLibrary',
+  #  'PhotoLibraryAddOnly',
+  # 'Reminders',
+  # 'Siri',
+  # 'SpeechRecognition',
+  # 'StoreKit',
+])
+
