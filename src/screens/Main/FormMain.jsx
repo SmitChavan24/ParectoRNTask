@@ -12,6 +12,7 @@ import {
   TextInput,
 } from 'react-native';
 import {
+  Popover,
   Box,
   Text,
   Heading,
@@ -48,8 +49,9 @@ import {
 } from 'react-native-permissions';
 
 import {useNavigation} from '@react-navigation/native';
-const FormMain = () => {
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+const FormMain = ({route}) => {
+  const email = route?.params?.email;
+  const [isPopoverOpen, setPopoverOpen] = useState(false);
   const [data, setData] = useState({
     firstname: '',
     lastname: '',
@@ -69,17 +71,19 @@ const FormMain = () => {
     imageuri: false,
     checker: false,
   });
+  const dataemail = useRef(email);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageData, setImageData] = useState(null);
   const storageKey = '@myApp:imageData';
   const tempNavigation = useNavigation();
-
+  
   useEffect(() => {
     requestCameraPermission();
   }, []);
 
   useEffect(() => {
-    getImageFromStorage();
+
+    // getImageFromStorage();
   }, []);
 
   const requestCameraPermission = async () => {
@@ -245,10 +249,10 @@ const FormMain = () => {
     }
 
     // Validate Image URI
-    if (!selectedImage) {
-      setError(prevError => ({...prevError, imageuri: true}));
-      hasErrors = true;
-    }
+    // if (!selectedImage) {
+    //   setError(prevError => ({...prevError, imageuri: true}));
+    //   hasErrors = true;
+    // }
 
     // Validate Checkbox
     if (!data.checker) {
@@ -262,9 +266,25 @@ const FormMain = () => {
     }
 
     // Continue with the form submission logic
-    // ...
+    setPopoverOpen(true)
     // You can save the data, navigate to the next screen, or perform other actions here
   };
+  const onFormComplete = async() => { 
+    
+    let newkeyemail = dataemail.current+".UserData"
+    console.log(newkeyemail)
+    try {
+      let inputDataString = JSON.stringify(data);
+      await AsyncStorage.setItem(newkeyemail, inputDataString);
+
+      let asyncresult = await AsyncStorage.getItem(newkeyemail);
+      if (asyncresult) {
+        tempNavigation.navigate("home",{ email: dataemail.current })
+      } else {
+        console.log('first toast');
+      }
+    } catch (error) {}
+   }
 
   // date- picker functions
   const showDatePicker = () => {
@@ -374,6 +394,7 @@ const FormMain = () => {
                       borderWidth: 2,
                       borderColor: 'rgba(153, 153, 153, 0.2)',
                       borderRadius: 5,
+                      paddingLeft:12
                     }}
                     placeholder={'date'}
                     onPressIn={() => showDatePicker()}>
@@ -528,8 +549,8 @@ const FormMain = () => {
         />
       </ScrollView>
       <FormControl maxW="300" isRequired isInvalid={error.checker}>
-      {/* <FormControl.ErrorMessage marginLeft="20%">Please agree!</FormControl.ErrorMessage>
-   */}
+        {/* <FormControl.ErrorMessage marginLeft="20%">Please agree!</FormControl.ErrorMessage>
+         */}
         <Checkbox
           isChecked={data.checker}
           colorScheme="green"
@@ -548,10 +569,29 @@ const FormMain = () => {
             I agree that mentioned details are correct as per my knowledge
           </Heading>
         </Checkbox>
-           </FormControl>
-      <Button mt="1" margin={5} colorScheme="indigo" onPress={onSubmitForm}>
-        Submit
-      </Button>
+      </FormControl>
+      <Popover
+      isOpen={isPopoverOpen}
+        trigger={triggerProps => {
+          return (
+            <Button {...triggerProps} colorScheme="indigo" mt="1" margin={5} onPress={onSubmitForm}>
+              Submit
+            </Button>
+          );
+        }}>
+        <Popover.Content accessibilityLabel="Delete Customerd" w="56">
+          <Popover.CloseButton />
+          <Popover.Header>Confirmation Box</Popover.Header>
+          <Popover.Body>
+            Confirm it!  ,Do you really want to submit these detail.
+          </Popover.Body>
+          <Popover.Footer justifyContent="flex-end">
+            <Button.Group space={2}>
+              <Button colorScheme="success" onPress={onFormComplete}>Submit</Button>
+            </Button.Group>
+          </Popover.Footer>
+        </Popover.Content>
+      </Popover>
     </View>
   );
 };

@@ -62,7 +62,9 @@ const RegisterScreen = () => {
           await AsyncStorage.setItem(inputData.email, inputDataString);
           tempNavigation.navigate("login",{ email: inputData.email })
         }
-      } catch (error) {}
+      } catch (error) {
+        console.log(error)
+      }
     }
   };
   const onChangeInputs = (name, value) => {

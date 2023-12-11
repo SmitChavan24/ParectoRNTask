@@ -56,7 +56,14 @@ const LoginScreen = ({route}) => {
       } else {
         asyncresult = JSON.parse(asyncresult);
         if (asyncresult.password === login.password) {
-          tempNavigation.navigate('form');
+         let homeasyncdata = asyncresult.email+".UserData"
+          let homeasync = await AsyncStorage.getItem(homeasyncdata);
+          if(homeasync){
+            setlogin({})
+            tempNavigation.navigate('home',{ email: asyncresult.email });
+          }else{
+            tempNavigation.navigate('form',{ email: asyncresult.email });
+          }
         }
         return 0;
       }

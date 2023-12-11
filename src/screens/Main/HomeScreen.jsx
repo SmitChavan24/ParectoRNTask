@@ -10,17 +10,37 @@ import {
   Button,
   HStack,
   Center,
+  Avatar
 } from 'native-base';
-import React from 'react'
+import React,{useEffect, useState,useRef} from 'react'
 import {useNavigation} from '@react-navigation/native';
 import DeviceInfo from 'react-native-device-info';
 import paddingHelper from '../../utils/paddingHelper';
 import globalColors from '../../utils/globalColors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const {width, height} = Dimensions.get('window');
 
-const HomeScreen = () => {
+const HomeScreen = ({route}) => {
+  const email = route?.params?.email;
+  const dataemail = useRef(email);
   const tempNavigation = useNavigation();
+  const [data, setdata] = useState({})
+  useEffect(() => {
+    getDatafromStorage()
+    
+  },[])
+  const getDatafromStorage =  async () => { 
+
+     let newkeyemail = dataemail.current+".UserData"
+    let asyncresult = await AsyncStorage.getItem(newkeyemail);
+      asyncresult=JSON.parse(asyncresult)
+      let wholeData = { ...asyncresult, email: dataemail.current };
+      console.log(wholeData,"asyncw result in home")
+
+      setdata(wholeData)
+   }
   return (
     <View style={{flex: 1}}>
     <StatusBar backgroundColor="lightblue" barStyle="dark-content" />
@@ -31,52 +51,40 @@ const HomeScreen = () => {
           paddingTop:paddingHelper()
         },
       ]}>
+        <Avatar bg="green.500" source={{
+      uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
+    }} size={"2xl"} alignSelf={"center"} margin={"5%"}>
+        AJ
+      </Avatar>
         <View style={styles.detailsContainer}>
           <View style={styles.detailHeader}>
-            <Text>{"TITILE"}</Text>
+            <Text>{"Personal Details"}</Text>
           </View>
           <View style={styles.table}>
             <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'Aadhar Card Number'}</Text>
-              <Text style={styles.valueText}>{'**** **** 4566'}</Text>
+              <Text style={styles.labelText}>{'First Name'}</Text>
+              <Text style={styles.valueText}>{data.firstname}</Text>
             </View>
             <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'PAN Number'}</Text>
-              <Text style={styles.valueText}>{'******250P'}</Text>
+              <Text style={styles.labelText}>{'Last Name'}</Text>
+              <Text style={styles.valueText}>{data.lastname}</Text>
             </View>
             <View style={styles.flexrow}>
               <Text style={styles.labelText}>{'Date of Birth'}</Text>
-              <Text style={styles.valueText}>{'10-12-1994'}</Text>
+              <Text style={styles.valueText}>{data.dob}</Text>
             </View>
             <View style={styles.flexrow}>
               <Text style={styles.labelText}>{'Email Id'}</Text>
-              <Text style={styles.valueText}>{'sanjay.singh@gmail.com'}</Text>
+              <Text style={styles.valueText}>{data.email}</Text>
             </View>
             <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'Nominee Details'}</Text>
-              <View style={styles.valueText}>
-                <View style={styles.flexrow}>
-                  <Text style={styles.nominee}>{'Ronak Singh'}</Text>
-                  <Text style={styles.relation}>{'(Brother)'}</Text>
-                </View>
-                <Text style={styles.textphone}>{'7208203606'}</Text>
-              </View>
-            </View>
-            <View style={styles.flexrow}>
-              <View style={styles.labelText}>
-                <Text style={styles.labelText}>{'Address'}</Text>
-                <Text style={styles.asperadhar}>{'(As per Aadhar)'}</Text>
-              </View>
-              <Text style={styles.valueText}>
-                {
-                  'Godrej & Boyce, Gate No 2, Plant No. 6, LBS Marg,, Opposite Vikhroli Bus Depot, Vikhroli West, Mumbai, Maharashtra 400079'
-                }
-              </Text>
+              <Text style={styles.labelText}>{'Gender'}</Text>
+              <Text style={styles.valueText}>{data.gender}</Text>
             </View>
           </View>
         </View>
       </ScrollView>
-      <Button onPress={()=>tempNavigation.navigate('login')}>Logout</Button>
+      <Button onPress={()=>tempNavigation.navigate('login')} style={{margin:10}}>Logout</Button>
     </View>
   )
 }
