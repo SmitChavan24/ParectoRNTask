@@ -10,6 +10,7 @@ import {
   Touchable,
   TouchableOpacity,
   TextInput,
+  BackHandler,
 } from 'react-native';
 import {
   Popover,
@@ -33,6 +34,7 @@ import {
   Spacer,
   Flex,
   Badge,
+  AlertDialog,
 } from 'native-base';
 import React, {useRef, useState, useEffect} from 'react';
 import paddingHelper from '../../utils/paddingHelper';
@@ -47,8 +49,8 @@ import {
   openSettings,
   request,
 } from 'react-native-permissions';
+import {useNavigation, useIsFocused} from '@react-navigation/native';
 
-import {useNavigation} from '@react-navigation/native';
 const FormMain = ({route}) => {
   const email = route?.params?.email;
   const [isPopoverOpen, setPopoverOpen] = useState(false);
@@ -73,18 +75,42 @@ const FormMain = ({route}) => {
   });
   const dataemail = useRef(email);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [imageData, setImageData] = useState(null);
+  const [checkbox, setCheckbox] = useState(false);
   const storageKey = '@myApp:imageData';
   const tempNavigation = useNavigation();
-  
+  const isFocused = useIsFocused();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const onClose = () => {
+    BackHandler.exitApp();
+  };
+
+  const cancelRef = useRef(null);
+
   useEffect(() => {
     requestCameraPermission();
   }, []);
 
+  const backAction = () => {
+    if (!isOpen) {
+      setIsOpen(!isOpen);
+    } else if (isOpen) {
+      console.log('hii');
+    }
+    setTimeout(() => {
+      setIsOpen(!isOpen);
+    }, 1500);
+    return true;
+  };
   useEffect(() => {
-
-    // getImageFromStorage();
-  }, []);
+    if (isFocused) {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction,
+      );
+      return () => backHandler.remove();
+    }
+  }, [isFocused]);
 
   const requestCameraPermission = async () => {
     try {
@@ -142,13 +168,15 @@ const FormMain = ({route}) => {
     }
   };
 
-  const clickImage = async () => {
+  const clickImage = async e => {
+    e.preventDefault();
     const options = {
       mediaType: 'photo',
       maxHeight: 2000,
       maxWidth: 2000,
       saveToPhotos: false,
       includeBase64: true,
+      cameraType: 'front',
     };
 
     launchCamera(options, response => {
@@ -157,13 +185,14 @@ const FormMain = ({route}) => {
       } else if (response.error) {
         console.log('Camera Error: ', response.error);
       } else {
-        let imageUri = response.uri || response.assets?.[0]?.uri;
-        setSelectedImage(imageUri);
-        console.log(imageUri);
+        let imagUri = response.uri || response.assets?.[0]?.uri;
+        setData({...data,imageuri: imagUri});
+        // console.log(imageUri);
       }
     });
   };
-  const pickImage = async () => {
+  const pickImage = async e => {
+    e.preventDefault();
     const options = {
       mediaType: 'photo',
       includeBase64: false,
@@ -177,33 +206,12 @@ const FormMain = ({route}) => {
       } else if (response.error) {
         console.log('Image picker error: ', response.error);
       } else {
-        let imageUri = response.uri || response.assets?.[0]?.uri;
-        setSelectedImage(imageUri);
+        let imagUri = response.uri || response.assets?.[0]?.uri;
+        setData({...data,imageuri: imagUri});
       }
     });
   };
 
-  const saveImageToStorage = async image => {
-    try {
-      await AsyncStorage.setItem(storageKey, JSON.stringify(image));
-    } catch (error) {
-      console.error('Error saving image to AsyncStorage:', error);
-    }
-  };
-
-  const getImageFromStorage = async () => {
-    try {
-      const storedImage = await AsyncStorage.getItem(storageKey);
-      if (storedImage !== null) {
-        setImageData(JSON.parse(storedImage));
-      }
-    } catch (error) {
-      console.error('Error getting image from AsyncStorage:', error);
-    }
-  };
-
-  // const onSubmitForm = (data) => {
-  // }
   const onSubmitForm = () => {
     let hasErrors = false;
 
@@ -219,13 +227,13 @@ const FormMain = ({route}) => {
     });
 
     // Validate First Name
-    if (!data.firstname && data.firstname.length < 3) {
+    if (!data?.firstname && data?.firstname?.length < 3) {
       setError(prevError => ({...prevError, firstname: true}));
       hasErrors = true;
     }
 
     // Validate Last Name
-    if (!data.lastname && data.lastname.length < 3) {
+    if (!data?.lastname && data?.lastname?.length < 3) {
       setError(prevError => ({...prevError, lastname: true}));
       hasErrors = true;
     }
@@ -249,13 +257,13 @@ const FormMain = ({route}) => {
     }
 
     // Validate Image URI
-    // if (!selectedImage) {
-    //   setError(prevError => ({...prevError, imageuri: true}));
-    //   hasErrors = true;
-    // }
+    if (!data.imageuri) {
+      setError(prevError => ({...prevError, imageuri: true}));
+      hasErrors = true;
+    }
 
     // Validate Checkbox
-    if (!data.checker) {
+    if (!checkbox) {
       setError(prevError => ({...prevError, checker: true}));
       hasErrors = true;
     }
@@ -266,26 +274,25 @@ const FormMain = ({route}) => {
     }
 
     // Continue with the form submission logic
-    setPopoverOpen(true)
+    setPopoverOpen(true);
     // You can save the data, navigate to the next screen, or perform other actions here
   };
-  const onFormComplete = async() => { 
-    
-    let newkeyemail = dataemail.current+".UserData"
-    console.log(newkeyemail)
+  const onFormComplete = async () => {
+    let newkeyemail = dataemail.current + '.UserData';
+    console.log(newkeyemail);
     try {
       let inputDataString = JSON.stringify(data);
       await AsyncStorage.setItem(newkeyemail, inputDataString);
 
       let asyncresult = await AsyncStorage.getItem(newkeyemail);
       if (asyncresult) {
-        tempNavigation.navigate("home",{ email: dataemail.current })
+        tempNavigation.navigate('home', {email: dataemail.current});
       } else {
         console.log('first toast');
       }
     } catch (error) {}
-   }
-
+  };
+  console.log(data,"data")
   // date- picker functions
   const showDatePicker = () => {
     setData({...data, datePicker: true});
@@ -303,6 +310,13 @@ const FormMain = ({route}) => {
 
     setData({...data, dob: formattedDate, datePicker: false});
     // hideDatePicker();
+  };
+  // onchange fn
+  const onChangeInputs = ( name, value) => {
+    setData(prevData => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   return (
@@ -348,7 +362,7 @@ const FormMain = ({route}) => {
                   </FormControl.Label>
                   <Input
                     placeholder=" first name"
-                    onChangeText={value => setData({...data, firstname: value})}
+                    onChangeText={value => onChangeInputs('firstname', value)}
                   />
                   <FormControl.HelperText
                     _text={{
@@ -372,7 +386,7 @@ const FormMain = ({route}) => {
                   </FormControl.Label>
                   <Input
                     placeholder="last name"
-                    onChangeText={value => setData({...data, lastname: value})}
+                    onChangeText={value => onChangeInputs('lastname', value)}
                   />
                   <FormControl.HelperText
                     _text={{
@@ -394,7 +408,7 @@ const FormMain = ({route}) => {
                       borderWidth: 2,
                       borderColor: 'rgba(153, 153, 153, 0.2)',
                       borderRadius: 5,
-                      paddingLeft:12
+                      paddingLeft: 12,
                     }}
                     placeholder={'date'}
                     onPressIn={() => showDatePicker()}>
@@ -417,9 +431,7 @@ const FormMain = ({route}) => {
                     accessibilityLabel="select gender"
                     // defaultValue='male'
                     // onChange={value => setData({...data, gender: value})}
-                    onChange={value =>
-                      setData(prevData => ({...prevData, gender: value}))
-                    }>
+                    onChange={value => onChangeInputs('gender', value)}>
                     <Stack
                       direction={{
                         base: 'row',
@@ -457,7 +469,7 @@ const FormMain = ({route}) => {
                       bg: 'teal.600',
                       endIcon: <CheckIcon size={5} />,
                     }}
-                    onValueChange={value => setData({...data, city: value})}
+                    onValueChange={value => onChangeInputs('city', value)}
                     mt="1">
                     <Select.Item label="Mumbai" value="mumbai" />
                     <Select.Item
@@ -479,58 +491,65 @@ const FormMain = ({route}) => {
                   <FormControl.Label>
                     Select your profile image
                   </FormControl.Label>
-                  <View style={{flexDirection: 'row'}}>
-                    <Pressable
-                      onPress={pickImage}
-                      rounded="8"
-                      overflow="hidden"
-                      borderWidth="1"
-                      borderColor="coolGray.300"
-                      maxW="40%"
-                      shadow="3"
-                      bg="coolGray.100"
-                      p="1">
-                      <Box>
-                        <HStack alignItems="center">
-                          <Badge
-                            colorScheme="darkBlue"
-                            _text={{
-                              color: 'white',
-                            }}
-                            variant="solid"
-                            rounded="4">
-                            Pick Image From Gallery
-                          </Badge>
-                          <Spacer />
-                        </HStack>
-                      </Box>
-                    </Pressable>
-                    <Pressable
-                      onPress={clickImage}
-                      rounded="8"
-                      overflow="hidden"
-                      borderWidth="1"
-                      borderColor="coolGray.300"
-                      maxW="40%"
-                      shadow="3"
-                      bg="coolGray.100"
-                      p="1">
-                      <Box>
-                        <HStack alignItems="center">
-                          <Badge
-                            colorScheme="darkBlue"
-                            _text={{
-                              color: 'white',
-                            }}
-                            variant="solid"
-                            rounded="4">
-                            Click Image From Camera
-                          </Badge>
-                          <Spacer />
-                        </HStack>
-                      </Box>
-                    </Pressable>
-                  </View>
+                  {/* <View style={{flexDirection: 'row'}}> */}
+                  <Pressable
+                    onPress={pickImage}
+                    rounded="8"
+                    overflow="hidden"
+                    borderWidth="1"
+                    borderColor="coolGray.300"
+                    maxW="40%"
+                    shadow="3"
+                    bg="coolGray.100"
+                    p="1">
+                    <Box>
+                      <HStack alignItems="center">
+                        <Badge
+                          colorScheme="darkBlue"
+                          _text={{
+                            color: 'white',
+                          }}
+                          variant="solid"
+                          rounded="4">
+                          Pick Image From Gallery
+                        </Badge>
+                        <Spacer />
+                      </HStack>
+                    </Box>
+                  </Pressable>
+                  <Pressable
+                    onPress={clickImage}
+                    rounded="8"
+                    overflow="hidden"
+                    borderWidth="1"
+                    borderColor="coolGray.300"
+                    maxW="40%"
+                    shadow="3"
+                    bg="coolGray.100"
+                    p="1">
+                    <Box>
+                      <HStack alignItems="center">
+                        <Badge
+                          colorScheme="darkBlue"
+                          _text={{
+                            color: 'white',
+                          }}
+                          variant="solid"
+                          rounded="4">
+                          Click Image From Camera
+                        </Badge>
+                        <Spacer />
+                      </HStack>
+                    </Box>
+                  </Pressable>
+                  {/* </View> */}
+                  <FormControl.HelperText
+                    _text={{
+                      fontSize: 'xs',
+                    }}>
+                    {'Image Uri :-'}
+                    {data.imageuri}
+                  </FormControl.HelperText>
                   <FormControl.ErrorMessage>
                     Please make a selection!
                   </FormControl.ErrorMessage>
@@ -539,25 +558,17 @@ const FormMain = ({route}) => {
             </Box>
           </Center>
         </View>
-        <DateTimePickerModal
-          isVisible={data.datePicker}
-          mode="date"
-          maximumDate={new Date()}
-          minimumDate={new Date(1700, 0, 1)}
-          onConfirm={handleConfirm}
-          onCancel={hideDatePicker}
-        />
       </ScrollView>
       <FormControl maxW="300" isRequired isInvalid={error.checker}>
         {/* <FormControl.ErrorMessage marginLeft="20%">Please agree!</FormControl.ErrorMessage>
          */}
         <Checkbox
-          isChecked={data.checker}
+          isChecked={checkbox}
           colorScheme="green"
           marginX={8}
           marginY={2}
           borderWidth={2}
-          onPress={her => setData({...data, checker: !data.checker})}>
+          onPress={her => setCheckbox(!checkbox) }>
           <Heading
             mt="1"
             _dark={{
@@ -570,11 +581,24 @@ const FormMain = ({route}) => {
           </Heading>
         </Checkbox>
       </FormControl>
+      <DateTimePickerModal
+        isVisible={data.datePicker}
+        mode="date"
+        maximumDate={new Date()}
+        minimumDate={new Date(1700, 0, 1)}
+        onConfirm={handleConfirm}
+        onCancel={hideDatePicker}
+      />
       <Popover
-      isOpen={isPopoverOpen}
+        isOpen={isPopoverOpen}
         trigger={triggerProps => {
           return (
-            <Button {...triggerProps} colorScheme="indigo" mt="1" margin={5} onPress={onSubmitForm}>
+            <Button
+              {...triggerProps}
+              colorScheme="indigo"
+              mt="1"
+              margin={5}
+              onPress={onSubmitForm}>
               Submit
             </Button>
           );
@@ -583,15 +607,43 @@ const FormMain = ({route}) => {
           <Popover.CloseButton />
           <Popover.Header>Confirmation Box</Popover.Header>
           <Popover.Body>
-            Confirm it!  ,Do you really want to submit these detail.
+            Confirm it! ,Do you really want to submit these detail.
           </Popover.Body>
           <Popover.Footer justifyContent="flex-end">
             <Button.Group space={2}>
-              <Button colorScheme="success" onPress={onFormComplete}>Submit</Button>
+              <Button colorScheme="success" onPress={onFormComplete}>
+                Submit
+              </Button>
             </Button.Group>
           </Popover.Footer>
         </Popover.Content>
       </Popover>
+      <AlertDialog
+        leastDestructiveRef={cancelRef}
+        isOpen={isOpen}
+        onClose={onClose}>
+        <AlertDialog.Content>
+          <AlertDialog.CloseButton />
+          <AlertDialog.Header>Exit Application</AlertDialog.Header>
+          <AlertDialog.Body>
+            This will remove all data relating to this form
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <Button.Group space={1}>
+              <Button
+                variant="unstyled"
+                colorScheme="coolGray"
+                onPress={() => setIsOpen(false)}
+                ref={cancelRef}>
+                Cancel
+              </Button>
+              <Button colorScheme="danger" onPress={onClose}>
+                I Agree
+              </Button>
+            </Button.Group>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
+      </AlertDialog>
     </View>
   );
 };
