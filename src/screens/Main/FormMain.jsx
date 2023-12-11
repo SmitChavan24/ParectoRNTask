@@ -169,7 +169,6 @@ const FormMain = ({route}) => {
   };
 
   const clickImage = async e => {
-    e.preventDefault();
     const options = {
       mediaType: 'photo',
       maxHeight: 2000,
@@ -227,13 +226,13 @@ const FormMain = ({route}) => {
     });
 
     // Validate First Name
-    if (!data?.firstname && data?.firstname?.length < 3) {
+    if (data?.firstname?.length < 3) {
       setError(prevError => ({...prevError, firstname: true}));
       hasErrors = true;
     }
 
     // Validate Last Name
-    if (!data?.lastname && data?.lastname?.length < 3) {
+    if (data?.lastname?.length < 3) {
       setError(prevError => ({...prevError, lastname: true}));
       hasErrors = true;
     }
@@ -292,7 +291,6 @@ const FormMain = ({route}) => {
       }
     } catch (error) {}
   };
-  console.log(data,"data")
   // date- picker functions
   const showDatePicker = () => {
     setData({...data, datePicker: true});
@@ -312,7 +310,7 @@ const FormMain = ({route}) => {
     // hideDatePicker();
   };
   // onchange fn
-  const onChangeInputs = ( name, value) => {
+  const onChangeInputs = (name, value) => {
     setData(prevData => ({
       ...prevData,
       [name]: value,
@@ -568,7 +566,7 @@ const FormMain = ({route}) => {
           marginX={8}
           marginY={2}
           borderWidth={2}
-          onPress={her => setCheckbox(!checkbox) }>
+          onPress={her => setCheckbox(!checkbox)}>
           <Heading
             mt="1"
             _dark={{
