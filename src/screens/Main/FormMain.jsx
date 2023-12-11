@@ -169,26 +169,30 @@ const FormMain = ({route}) => {
   };
 
   const clickImage = async e => {
-    const options = {
-      mediaType: 'photo',
-      maxHeight: 2000,
-      maxWidth: 2000,
-      saveToPhotos: false,
-      includeBase64: true,
-      cameraType: 'front',
-    };
-
-    launchCamera(options, response => {
-      if (response.didCancel) {
-        console.log('User cancelled camera');
-      } else if (response.error) {
-        console.log('Camera Error: ', response.error);
-      } else {
-        let imagUri = response.uri || response.assets?.[0]?.uri;
-        setData({...data,imageuri: imagUri});
-        // console.log(imageUri);
-      }
-    });
+    try {
+      const options = {
+        mediaType: 'photo',
+        maxWidth: 20,
+        maxHeight: 50,
+        quality: 1,
+        includeBase64: true,
+      };
+  
+     await launchCamera(options, response => {
+        if (response.didCancel) {
+          console.log('User cancelled camera');
+        } else if (response.error) {
+          console.log('Camera Error: ', response.error);
+        } else {
+          let imagUri = response.uri || response.assets?.[0]?.uri;
+          setData({...data,imageuri: imagUri});
+          // console.log(imageUri);
+        }
+      });
+    } catch (error) {
+      console.log(error,"error")
+    }
+   
   };
   const pickImage = async e => {
     e.preventDefault();
@@ -285,6 +289,7 @@ const FormMain = ({route}) => {
 
       let asyncresult = await AsyncStorage.getItem(newkeyemail);
       if (asyncresult) {
+        setPopoverOpen(false)
         tempNavigation.navigate('home', {email: dataemail.current});
       } else {
         console.log('first toast');
