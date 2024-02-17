@@ -60,10 +60,10 @@ const RegisterScreen = () => {
           console.log('first toast');
         } else {
           await AsyncStorage.setItem(inputData.email, inputDataString);
-          tempNavigation.navigate("login",{ email: inputData.email })
+          tempNavigation.navigate('login', {email: inputData.email});
         }
       } catch (error) {
-        console.log(error)
+        console.log(error);
       }
     }
   };
@@ -92,15 +92,15 @@ const RegisterScreen = () => {
         ]}>
         <View>
           <Center w="100%">
-            <Box safeArea p="2" w="90%" maxW="290" py="20">
+            <Box safeArea p="2" w="90%" maxW="350" py="20">
               <Heading
-                size="lg"
+                size="xl"
                 color="coolGray.800"
                 _dark={{
                   color: 'warmGray.50',
                 }}
                 fontWeight="semibold">
-                Welcome to Peracto Infotech
+                Welcome to Zatpat News
               </Heading>
               <Heading
                 mt="1"
@@ -109,20 +109,23 @@ const RegisterScreen = () => {
                   color: 'warmGray.200',
                 }}
                 fontWeight="medium"
-                size="xs">
+                size="lg">
                 Sign up to continue!
               </Heading>
 
-              <VStack space={3} mt="5">
+              <VStack space={5} mt="10">
                 <FormControl isRequired isInvalid={errorfield.email}>
-                  <FormControl.Label>Email</FormControl.Label>
+                  <FormControl.Label _text={{fontSize: 'lg'}}>
+                    Email
+                  </FormControl.Label>
                   <Input
+                    size={'2xl'}
                     onChangeText={text => onChangeInputs('email', text)}
                     value={inputData.email}
                   />
                   <FormControl.HelperText
                     _text={{
-                      fontSize: 'xs',
+                      fontSize: 'md',
                     }}>
                     email should end with @, .com, .net, etc.
                   </FormControl.HelperText>
@@ -134,15 +137,18 @@ const RegisterScreen = () => {
                   </FormControl.ErrorMessage>
                 </FormControl>
                 <FormControl isRequired isInvalid={errorfield.password}>
-                  <FormControl.Label>Password</FormControl.Label>
+                  <FormControl.Label _text={{fontSize: 'lg'}}>
+                    Password
+                  </FormControl.Label>
                   <Input
+                    size={'2xl'}
                     type="password"
                     onChangeText={text => onChangeInputs('password', text)}
                     value={inputData.password}
                   />
                   <FormControl.HelperText
                     _text={{
-                      fontSize: 'xs',
+                      fontSize: 'md',
                     }}>
                     password minimum length should be 6.
                   </FormControl.HelperText>
@@ -155,8 +161,11 @@ const RegisterScreen = () => {
                 </FormControl>
 
                 <FormControl isRequired isInvalid={errorfield.confirmpassword}>
-                  <FormControl.Label>Confirm Password</FormControl.Label>
+                  <FormControl.Label _text={{fontSize: 'lg'}}>
+                    Confirm Password
+                  </FormControl.Label>
                   <Input
+                    size={'2xl'}
                     type="password"
                     onChangeText={text =>
                       onChangeInputs('confirmpassword', text)
@@ -165,7 +174,7 @@ const RegisterScreen = () => {
                   />
                   <FormControl.HelperText
                     _text={{
-                      fontSize: 'xs',
+                      fontSize: 'md',
                     }}>
                     please confirm your password.
                   </FormControl.HelperText>
@@ -176,7 +185,11 @@ const RegisterScreen = () => {
                     password doesn't match
                   </FormControl.ErrorMessage>
                 </FormControl>
-                <Button mt="2" colorScheme="indigo" onPress={onSubmitInputs}>
+                <Button
+                  mt="2"
+                  colorScheme="indigo"
+                  size={'lg'}
+                  onPress={onSubmitInputs}>
                   Sign up
                 </Button>
               </VStack>

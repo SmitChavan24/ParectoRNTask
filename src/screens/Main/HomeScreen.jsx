@@ -1,259 +1,125 @@
-import {StyleSheet, View, StatusBar, ScrollView, Platform,Dimensions,BackHandler} from 'react-native';
 import {
-  Box,
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
   Text,
-  Heading,
-  VStack,
-  FormControl,
-  Input,
-  Link,
-  Button,
-  HStack,
-  Center,
-  Avatar
-} from 'native-base';
-import React,{useEffect, useState,useRef} from 'react'
-import {useNavigation} from '@react-navigation/native';
-import DeviceInfo from 'react-native-device-info';
-import paddingHelper from '../../utils/paddingHelper';
-import globalColors from '../../utils/globalColors';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+  Image,
+  View,
+} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import axios from 'axios';
 
+const HomeScreen = () => {
+  const [News, setNews] = useState([]);
+  const [apiError, setApiError] = useState(false);
+  const fallbackImage =
+    'https://st2.depositphotos.com/2059749/8311/i/950/depositphotos_83118644-stock-photo-3d-paper-plane-out-of.jpg';
 
-const {width, height} = Dimensions.get('window');
-
-const HomeScreen = ({route}) => {
-  const email = route?.params?.email;
-  const dataemail = useRef(email);
-  const tempNavigation = useNavigation();
-  const [data, setdata] = useState({})
   useEffect(() => {
-    getDatafromStorage()
-    
-  },[])
-  const getDatafromStorage =  async () => { 
-     let newkeyemail = dataemail.current+".UserData"
-    let asyncresult = await AsyncStorage.getItem(newkeyemail);
-      asyncresult=JSON.parse(asyncresult)
-      let wholeData = { ...asyncresult, email: dataemail.current };
-      console.log(wholeData,"asyncw result in home")
+    fetchNews();
+  }, []);
 
-      setdata(wholeData)
-   }
+  const fetchNews = async () => {
+    try {
+      let response = await axios.get(
+        'https://newsapi.org/v2/top-headlines?country=in&apiKey=952ae4da52194f58903bf45b00cd2040',
+      );
+      //   https://newsdata.io/api-key
+      if (response?.data?.articles) {
+        setNews(response?.data?.articles);
+        //   console.log(response.data.articles);
+      }
+    } catch (error) {
+      console.log(error);
+      setApiError({
+        error: 'api error',
+        message: `${error}`,
+        status_code: 500,
+      });
+    }
+  };
+
+  const RenderItem = (item, index) => {
+    return (
+      <Pressable
+        style={{
+          width: '95%',
+          alignSelf: 'center',
+          shadowColor: 'black',
+          elevation: 2,
+          backgroundColor: 'white',
+          margin: '2%',
+          alignItems: 'center',
+          borderRadius: 5,
+        }}
+        key={index}>
+        <Image
+          //   source={{
+          //     uri: item?.item?.urlToImage || fallbackImage,
+          //   }}
+          src={item?.item?.urlToImage || fallbackImage}
+          style={{
+            width: '95%',
+            height: 300,
+            marginVertical: '1%',
+            borderRadius: 3,
+            borderWidth: 1.5,
+            borderColor: '#d6d6c2',
+          }}
+          //   defaultSource={{uri: fallbackImage}}
+          loadingIndicatorSource={{uri: item?.item?.urlToImage}}
+
+          //   onError={e => {
+          //     e.currentTarget.src = fallbackImage;
+          //   }}
+        />
+        <Text
+          style={{
+            color: 'black',
+            width: '90%',
+            fontSize: 17,
+            letterSpacing: 0.3,
+            fontWeight: '500',
+          }}>
+          {item?.item?.title}
+        </Text>
+        <Text style={{color: 'black'}}>{console.log(item.item)}</Text>
+      </Pressable>
+    );
+  };
   return (
-    <View style={{flex: 1}}>
-    <StatusBar backgroundColor="lightblue" barStyle="dark-content" />
-    <ScrollView
-      keyboardShouldPersistTaps="handled"
-      contentContainerStyle={[
-        {
-          paddingTop:paddingHelper()
-        },
-      ]}>
-        <Avatar bg="green.500" source={{
-         uri: data.imageuri
-    }} size={"2xl"} alignSelf={"center"} margin={"5%"}>
-        AJ
-      </Avatar>
-        <View style={styles.detailsContainer}>
-          <View style={styles.detailHeader}>
-            <Text>{"Personal Details"}</Text>
-          </View>
-          <View style={styles.table}>
-            <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'First Name'}</Text>
-              <Text style={styles.valueText}>{data.firstname}</Text>
-            </View>
-            <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'Last Name'}</Text>
-              <Text style={styles.valueText}>{data.lastname}</Text>
-            </View>
-            <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'Date of Birth'}</Text>
-              <Text style={styles.valueText}>{data.dob}</Text>
-            </View>
-            <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'Email Id'}</Text>
-              <Text style={styles.valueText}>{data.email}</Text>
-            </View>
-            <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'Gender'}</Text>
-              <Text style={styles.valueText}>{data.gender}</Text>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-      <Button onPress={()=>tempNavigation.navigate('login')} style={{margin:10}}>Logout</Button>
+    <View style={{flex: 1, backgroundColor: 'white'}}>
+      <View
+        style={{
+          width: '100%',
+          backgroundColor: 'white',
+          height: '7%',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <Text style={{fontSize: 32, fontWeight: 'bold', color: 'black'}}>
+          Zatpat News
+        </Text>
+      </View>
+      <View
+        style={{
+          backgroundColor: 'red',
+          height: '0.7%',
+          alignSelf: 'center',
+          width: '90%',
+          borderRadius: 3,
+        }}></View>
+      <FlatList
+        data={News}
+        keyExtractor={(id, index) => index.toString()}
+        renderItem={RenderItem}
+        style={{flex: 1, margin: '2%'}}
+      />
     </View>
-  )
-}
+  );
+};
 
-export default HomeScreen
+export default HomeScreen;
 
-const styles = StyleSheet.create({
-  asperadhar: {
-    color: '#755B97',
-    fontSize: 8,
-    fontFamily: globalColors.fontMedium,
-  },
-  textphone: {fontSize: 10, color: '#8E8E8E', lineHeight: 13},
-  flexrow: {
-    flexDirection: 'row',
-  },
-  super: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingTop: paddingHelper(),
-  },
-  headerText: {
-    fontFamily: globalColors?.fontBold,
-    fontSize: 16,
-    lineHeight: 20,
-    letterSpacing: 0.3,
-    marginVertical: '2.8%',
-    marginHorizontal: '6%',
-    width: '100%',
-  },
-  bannerContainer: {
-    borderRadius: 10,
-    width: '88%',
-    marginTop: '2%',
-    borderColor: '#FFDDC4',
-    alignSelf: 'center',
-  },
-  bannerTitle: {
-    fontFamily: globalColors?.fontSemiBold,
-    fontSize: 14,
-    color: '#0E0E0E',
-    lineHeight: 17,
-    letterSpacing: 0.3,
-  },
-  bannerAmt: {
-    fontFamily: globalColors?.fontBold,
-    fontSize: 10,
-    color: 'rgba(14, 14, 14, 0.70)',
-    lineHeight: 12,
-    letterSpacing: 0.3,
-    marginTop: '2%',
-  },
-  detailsContainer: {
-    width: '90%',
-    alignSelf: 'center',
-    borderRadius: (width * 2.5) / 100,
-    borderWidth: 1,
-    borderColor: 'black',
-    justifyContent: 'center',
-    marginTop: '5%',
-    padding: 15,
-    paddingBottom: (height * 3.5) / 100,
-  },
-  detailHeader: {
-    flexDirection: 'row',
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: '3%',
-  },
-  labelText: {
-    fontFamily: globalColors.fontMedium,
-    fontSize: 12,
-    color: '#7A7A7A',
-    lineHeight: 24,
-    width: '55%',
-  },
-  valueText: {
-    fontFamily: globalColors.fontRegular,
-    fontSize: 12,
-    lineHeight: 24,
-    color: '#0E0E0E',
-    marginLeft: '10%',
-    width: '70%',
-  },
-  button: {
-    width: '90%',
-    height: (height * 6) / 100,
-    backgroundColor: '#44226E',
-    alignSelf: 'center',
-    borderRadius: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderColor: 'rgba(228, 228, 228, 0.9)',
-    margin: '5%',
-  },
-  buttontext: {
-    fontFamily: globalColors.fontSemiBold,
-    fontSize: (width * 4) / 100,
-    lineHeight: 20,
-    letterSpacing: 0.3,
-  },
-  infotick: {
-    marginLeft: '4%',
-    fontFamily: globalColors?.fontMedium,
-    fontSize: 12,
-    textAlignVertical: 'center',
-    letterSpacing: 0.3,
-    lineHeight: 18,
-    marginBottom: '2%',
-  },
-  footer: {
-    flexDirection: 'row',
-    width: '95%',
-    alignSelf: 'flex-start',
-  },
-  footermain: {
-    width: (width * 85) / 100,
-    alignSelf: 'center',
-    marginTop: '5%',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  table: {
-    flexDirection: 'column',
-    marginRight: '25%',
-  },
-  image: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: '4%',
-  },
-  nominee: {
-    fontFamily: globalColors.fontRegular,
-    fontSize: 12,
-    lineHeight: 24,
-    color: '#0E0E0E',
-  },
-  relation: {
-    fontFamily: globalColors.fontRegular,
-    fontSize: 10,
-    lineHeight: 24,
-    color: '#8E8E8E',
-    marginLeft: '2%',
-  },
-  plan: {
-    fontFamily: globalColors?.fontBold,
-    fontSize: 10,
-    color: '#44226E',
-    top: 2,
-    letterSpacing: 0.3,
-  },
-  plans: {
-    fontFamily: globalColors?.fontMedium,
-    fontSize: 12,
-    color: '#0E0E0E',
-    letterSpacing: 0.3,
-    marginRight: '2%',
-  },
-  cover: {
-    fontFamily: globalColors?.fontBold,
-    fontSize: 10,
-    color: '#44226E',
-    top: 2,
-    letterSpacing: 0.3,
-  },
-  covers: {
-    fontFamily: globalColors?.fontBold,
-    fontSize: 10,
-    color: '#44226E',
-    top: 2,
-    letterSpacing: 0.3,
-  },
-});
+const styles = StyleSheet.create({});

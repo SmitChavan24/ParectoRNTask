@@ -133,15 +133,15 @@ const LoginScreen = ({route}) => {
         ]}>
         <View>
           <Center w="100%">
-            <Box safeArea p="1" py="40" w="90%" maxW="290">
+            <Box safeArea p="1" py="40" w="90%" maxW="350">
               <Heading
-                size="lg"
+                size="xl"
                 fontWeight="600"
                 color="coolGray.800"
                 _dark={{
                   color: 'warmGray.50',
                 }}>
-                Welcome to Peracto Infotech
+                Welcome to Zatpat News
               </Heading>
               <Heading
                 mt="1"
@@ -150,15 +150,18 @@ const LoginScreen = ({route}) => {
                 }}
                 color="coolGray.600"
                 fontWeight="medium"
-                size="xs">
+                size="md">
                 Log in to continue!
               </Heading>
 
-              <VStack space={3} mt="5">
+              <VStack space={5} mt="5">
                 <FormControl isInvalid={errorfield.email}>
-                  <FormControl.Label>Email ID</FormControl.Label>
+                  <FormControl.Label _text={{fontSize: 'lg'}}>
+                    Email ID
+                  </FormControl.Label>
                   <Input
                     value={login.email}
+                    size={'2xl'}
                     onChangeText={text => onChangeInputs('email', text)}
                   />
                   <FormControl.ErrorMessage
@@ -169,12 +172,21 @@ const LoginScreen = ({route}) => {
                   </FormControl.ErrorMessage>
                 </FormControl>
                 <FormControl isInvalid={errorfield.password}>
-                  <FormControl.Label>Password</FormControl.Label>
+                  <FormControl.Label _text={{fontSize: 'lg'}}>
+                    Password
+                  </FormControl.Label>
                   <Input
+                    size={'2xl'}
                     type="password"
                     value={login.password}
                     onChangeText={text => onChangeInputs('password', text)}
                   />
+                  <FormControl.HelperText
+                    _text={{
+                      fontSize: 'md',
+                    }}>
+                    password minimum length should be 6.
+                  </FormControl.HelperText>
                   <FormControl.ErrorMessage
                     _text={{
                       fontSize: 'xs',
@@ -188,6 +200,7 @@ const LoginScreen = ({route}) => {
                     login.email && login?.password?.length > 5 ? false : true
                   }
                   mt="2"
+                  size={'lg'}
                   style={{
                     backgroundColor:
                       login.email && login?.password?.length > 5
@@ -201,7 +214,7 @@ const LoginScreen = ({route}) => {
                 </Button>
                 <HStack mt="6" justifyContent="center">
                   <Text
-                    fontSize="sm"
+                    fontSize="lg"
                     color="coolGray.600"
                     _dark={{
                       color: 'warmGray.200',
@@ -212,7 +225,8 @@ const LoginScreen = ({route}) => {
                     _text={{
                       color: 'indigo.500',
                       fontWeight: 'medium',
-                      fontSize: 'sm',
+                      fontSize: 'lg',
+                      marginLeft: '1',
                     }}
                     onPress={() => {
                       setError({});

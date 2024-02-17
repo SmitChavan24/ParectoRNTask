@@ -177,22 +177,22 @@ const FormMain = ({route}) => {
         quality: 1,
         includeBase64: true,
       };
-  
-     await launchCamera(options, response => {
-        if (response.didCancel) {
-          console.log('User cancelled camera');
-        } else if (response.error) {
-          console.log('Camera Error: ', response.error);
-        } else {
-          let imagUri = response.uri || response.assets?.[0]?.uri;
-          setData({...data,imageuri: imagUri});
-          // console.log(imageUri);
-        }
+
+      await launchCamera(options, response => {
+        console.log(response);
+        // if (response.didCancel) {
+        //   console.log('User cancelled camera');
+        // } else if (response.error) {
+        //   console.log('Camera Error: ', response.error);
+        // } else {
+        //   let imagUri = response.uri || response.assets?.[0]?.uri;
+        //   setData({...data,imageuri: imagUri});
+        //   // console.log(imageUri);
+        // }
       });
     } catch (error) {
-      console.log(error,"error")
+      console.log(error, 'error');
     }
-   
   };
   const pickImage = async e => {
     e.preventDefault();
@@ -210,7 +210,7 @@ const FormMain = ({route}) => {
         console.log('Image picker error: ', response.error);
       } else {
         let imagUri = response.uri || response.assets?.[0]?.uri;
-        setData({...data,imageuri: imagUri});
+        setData({...data, imageuri: imagUri});
       }
     });
   };
@@ -286,10 +286,10 @@ const FormMain = ({route}) => {
     try {
       let inputDataString = JSON.stringify(data);
       await AsyncStorage.setItem(newkeyemail, inputDataString);
-
+      await AsyncStorage.setItem('session', dataemail.current);
       let asyncresult = await AsyncStorage.getItem(newkeyemail);
       if (asyncresult) {
-        setPopoverOpen(false)
+        setPopoverOpen(false);
         tempNavigation.navigate('home', {email: dataemail.current});
       } else {
         console.log('first toast');
@@ -337,7 +337,7 @@ const FormMain = ({route}) => {
           <Center w="80%">
             <Box safeArea p="1" w="100%" maxW="350" py="10%" marginLeft={5}>
               <Heading
-                size="lg"
+                size="xl"
                 color="coolGray.800"
                 _dark={{
                   color: 'warmGray.50',
@@ -352,7 +352,7 @@ const FormMain = ({route}) => {
                   color: 'warmGray.200',
                 }}
                 fontWeight="medium"
-                size="xs">
+                size="md">
                 Fill up the form to continue!
               </Heading>
               <VStack space={5} mt="5">
@@ -360,16 +360,19 @@ const FormMain = ({route}) => {
                   <FormControl.Label
                     _text={{
                       bold: true,
+                      fontSize: 'md',
                     }}>
                     First Name
                   </FormControl.Label>
                   <Input
                     placeholder=" first name"
                     onChangeText={value => onChangeInputs('firstname', value)}
+                    size={'lg'}
                   />
                   <FormControl.HelperText
                     _text={{
                       fontSize: 'xs',
+                      fontSize: 'md',
                     }}>
                     First Name should contain atleast 3 character.
                   </FormControl.HelperText>
@@ -384,16 +387,19 @@ const FormMain = ({route}) => {
                   <FormControl.Label
                     _text={{
                       bold: true,
+                      fontSize: 'md',
                     }}>
                     Last Name
                   </FormControl.Label>
                   <Input
                     placeholder="last name"
                     onChangeText={value => onChangeInputs('lastname', value)}
+                    size={'lg'}
                   />
                   <FormControl.HelperText
                     _text={{
                       fontSize: 'xs',
+                      fontSize: 'md',
                     }}>
                     Last Name should contain atleast 3 character.
                   </FormControl.HelperText>
@@ -405,28 +411,27 @@ const FormMain = ({route}) => {
                   </FormControl.ErrorMessage>
                 </FormControl>
                 <FormControl maxW="300" isRequired isInvalid={error.dob}>
-                  <FormControl.Label>Choose Date of Birth</FormControl.Label>
-                  <TextInput
-                    style={{
-                      borderWidth: 2,
-                      borderColor: 'rgba(153, 153, 153, 0.2)',
-                      borderRadius: 5,
-                      paddingLeft: 12,
-                    }}
+                  <FormControl.Label _text={{bold: true, fontSize: 'md'}}>
+                    Choose Date of Birth
+                  </FormControl.Label>
+                  <Input
+                    // style={{
+                    //   borderWidth: 2,
+                    //   borderColor: 'rgba(153, 153, 153, 0.2)',
+                    //   borderRadius: 5,
+                    //   paddingLeft: 12,
+                    // }}
+                    value={data.dob}
+                    size={'lg'}
                     placeholder={'date'}
-                    onPressIn={() => showDatePicker()}>
-                    <Text>{data.dob}</Text>
-                  </TextInput>
+                    onPressIn={() => showDatePicker()}></Input>
                   <FormControl.ErrorMessage>
                     Please make a selection!
                   </FormControl.ErrorMessage>
                 </FormControl>
 
                 <FormControl isInvalid={error.gender} isRequired>
-                  <FormControl.Label
-                    _text={{
-                      bold: true,
-                    }}>
+                  <FormControl.Label _text={{bold: true, fontSize: 'md'}}>
                     Select Gender
                   </FormControl.Label>
                   <Radio.Group
@@ -463,11 +468,14 @@ const FormMain = ({route}) => {
                   </FormControl.ErrorMessage>
                 </FormControl>
                 <FormControl maxW="300" isRequired isInvalid={error.city}>
-                  <FormControl.Label>Choose City</FormControl.Label>
+                  <FormControl.Label _text={{bold: true, fontSize: 'md'}}>
+                    Choose City
+                  </FormControl.Label>
                   <Select
                     minWidth="200"
                     accessibilityLabel="Choose City"
                     placeholder="Choose City"
+                    size={'lg'}
                     _selectedItem={{
                       bg: 'teal.600',
                       endIcon: <CheckIcon size={5} />,
@@ -475,11 +483,8 @@ const FormMain = ({route}) => {
                     onValueChange={value => onChangeInputs('city', value)}
                     mt="1">
                     <Select.Item label="Mumbai" value="mumbai" />
-                    <Select.Item
-                      label="Mumbai Suburban"
-                      value="mumbai suburban"
-                    />
-                    <Select.Item label="Navi Mumbai" value="navi mumbai" />
+                    <Select.Item label="Jaipur" value="jaipur" />
+                    <Select.Item label="Lucknow" value="lucknow" />
                     <Select.Item label="Delhi" value="delhi" />
                     <Select.Item label="Bengaluru" value="bengaluru" />
                     <Select.Item label="Hyderabad" value="hyderabad" />
@@ -491,7 +496,7 @@ const FormMain = ({route}) => {
                 </FormControl>
 
                 <FormControl maxW="300" isRequired isInvalid={error.imageuri}>
-                  <FormControl.Label>
+                  <FormControl.Label _text={{bold: true, fontSize: 'md'}}>
                     Select your profile image
                   </FormControl.Label>
                   {/* <View style={{flexDirection: 'row'}}> */}
@@ -504,7 +509,8 @@ const FormMain = ({route}) => {
                     maxW="40%"
                     shadow="3"
                     bg="coolGray.100"
-                    p="1">
+                    p="1"
+                    m={'3'}>
                     <Box>
                       <HStack alignItems="center">
                         <Badge
@@ -520,7 +526,7 @@ const FormMain = ({route}) => {
                       </HStack>
                     </Box>
                   </Pressable>
-                  <Pressable
+                  {/* <Pressable
                     onPress={clickImage}
                     rounded="8"
                     overflow="hidden"
@@ -544,7 +550,7 @@ const FormMain = ({route}) => {
                         <Spacer />
                       </HStack>
                     </Box>
-                  </Pressable>
+                  </Pressable> */}
                   {/* </View> */}
                   <FormControl.HelperText
                     _text={{
@@ -562,7 +568,7 @@ const FormMain = ({route}) => {
           </Center>
         </View>
       </ScrollView>
-      <FormControl maxW="300" isRequired isInvalid={error.checker}>
+      <FormControl maxW="500" isRequired isInvalid={error.checker}>
         {/* <FormControl.ErrorMessage marginLeft="20%">Please agree!</FormControl.ErrorMessage>
          */}
         <Checkbox
@@ -579,7 +585,8 @@ const FormMain = ({route}) => {
             }}
             color="coolGray.600"
             fontWeight="medium"
-            size="xs">
+            size="xs"
+            m={'1'}>
             I agree that mentioned details are correct as per my knowledge
           </Heading>
         </Checkbox>
@@ -600,22 +607,27 @@ const FormMain = ({route}) => {
               {...triggerProps}
               colorScheme="indigo"
               mt="1"
-              margin={5}
+              size={'lg'}
+              margin={7}
               onPress={onSubmitForm}>
               Submit
             </Button>
           );
         }}>
         <Popover.Content accessibilityLabel="Delete Customerd" w="56">
-          <Popover.CloseButton onPress={()=>setPopoverOpen(false)} />
+          <Popover.CloseButton onPress={() => setPopoverOpen(false)} />
           <Popover.Header>Confirmation Box</Popover.Header>
-          <Popover.Body>
+          <Popover.Body _text={{fontSize: 'md'}}>
             Confirm it! ,Do you really want to submit these detail.
           </Popover.Body>
           <Popover.Footer justifyContent="flex-end">
             <Button.Group space={2}>
-              <Button colorScheme="success" onPress={onFormComplete}>
-                Submit
+              <Button
+                colorScheme="success"
+                width={'48'}
+                size={'lg'}
+                onPress={onFormComplete}>
+                Confirm Submit
               </Button>
             </Button.Group>
           </Popover.Footer>

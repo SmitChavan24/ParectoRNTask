@@ -10,6 +10,7 @@ import RegisterScreen from './src/screens/Auth/RegisterScreen';
 import HomeScreen from './src/screens/Main/HomeScreen';
 import SplashScreen from './src/screens/Splash/SplashScreen';
 import FormMain from './src/screens/Main/FormMain';
+import ProfileScreen from './src/screens/Main/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -47,6 +48,13 @@ const App = () => {
             }}
           />
                <Stack.Screen
+            name="profile"
+            component={ProfileScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+            <Stack.Screen
             name="home"
             component={HomeScreen}
             options={{
