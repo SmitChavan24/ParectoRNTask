@@ -38,7 +38,12 @@ const ProfileScreen = ({route}) => {
     getDatafromStorage();
   }, []);
   const getDatafromStorage = async () => {
-    let newkeyemail = dataemail.current + '.UserData';
+    let newkeyemail = '';
+    if (dataemail) {
+      newkeyemail = dataemail.current + '.UserData';
+    } else {
+      newkeyemail = await AsyncStorage.getItem('session');
+    }
     let asyncresult = await AsyncStorage.getItem(newkeyemail);
     asyncresult = JSON.parse(asyncresult);
     let wholeData = {...asyncresult, email: dataemail.current};
