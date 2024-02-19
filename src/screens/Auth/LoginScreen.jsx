@@ -25,6 +25,7 @@ import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import firestore from '@react-native-firebase/firestore';
+import AnimatedLoader from 'react-native-animated-loader';
 
 const LoginScreen = ({route}) => {
   const tempNavigation = useNavigation();
@@ -39,6 +40,7 @@ const LoginScreen = ({route}) => {
   });
   const [bools, setBools] = useState({
     uniqueIdBool: true,
+    modalNet: false,
   });
   const [isConnected, setIsConnected] = useState(null);
   const email = route?.params?.email;
@@ -183,6 +185,13 @@ const LoginScreen = ({route}) => {
 
   return (
     <View style={{flex: 1}}>
+      <AnimatedLoader
+        visible={!isConnected}
+        overlayColor="grey"
+        source={require('../../assets/network.json')}
+        animationStyle={styles.lottie}
+        speed={0.4}
+      />
       <StatusBar backgroundColor="lightblue" barStyle="dark-content" />
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -312,4 +321,9 @@ const LoginScreen = ({route}) => {
 
 export default LoginScreen;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  lottie: {
+    width: 200,
+    height: 200,
+  },
+});
