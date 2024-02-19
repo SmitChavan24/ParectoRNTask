@@ -5,17 +5,12 @@ import {
   StyleSheet,
   Text,
   Image,
-  Linking,
-  Modal,
   View,
-  Button,
-  BackHandler,
-  RefreshControl,
   TouchableOpacity,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import axios from 'axios';
-import {VStack, Avatar, Center} from 'native-base';
+import {VStack, Avatar, Center, Modal} from 'native-base';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import firestore from '@react-native-firebase/firestore';
@@ -81,17 +76,6 @@ const HomeScreen = props => {
     };
   }, [isConnected]);
 
-  const onRefresh = () => {
-    // Set the refreshing state to true when the user pulls down to refresh
-    setRefreshing(true);
-    setModalVisible(true);
-    // Perform your asynchronous data fetching or any other operation
-    // ...
-
-    // After completing the operation, set refreshing back to false
-    setRefreshing(false);
-  };
-
   // const fetchAllUsers = async () => {
   //   try {
   //     const querySnapshot = await firestore().collection('user').get();
@@ -126,7 +110,6 @@ const HomeScreen = props => {
   };
 
   const openModal = () => {
-    console.log('imm ');
     setModalVisible(!modalVisible);
   };
   const fetchNews = async () => {
@@ -238,11 +221,7 @@ const HomeScreen = props => {
     );
   };
   return (
-    <ScrollView
-      style={{flex: 1, backgroundColor: 'white'}}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }>
+    <View style={{flex: 1, backgroundColor: 'white'}}>
       <View
         style={{
           width: '100%',
@@ -353,15 +332,7 @@ const HomeScreen = props => {
       {/* <Button
         title="press"
         onPress={() => props.navigation.navigate('login')}></Button> */}
-      <Modal visible={modalVisible} animationType="none" transparent>
-        <Pressable
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            position: 'relative',
-            zIndex: 999,
-          }}
-          onPress={() => setModalVisible(!modalVisible)}></Pressable>
+      <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)}>
         <View
           style={{
             height: '100%',
@@ -371,6 +342,7 @@ const HomeScreen = props => {
             borderColor: '#f5f5f0',
             borderRadius: 5,
             position: 'absolute',
+            alignSelf: 'flex-start',
             zIndex: 999,
             justifyContent: 'space-between',
           }}>
@@ -378,17 +350,20 @@ const HomeScreen = props => {
             <Text
               style={{
                 alignSelf: 'center',
-                marginVertical: '5%',
+                marginTop: '25%',
+                marginBottom: '10%',
                 color: 'grey',
+                fontSize: 18,
+                fontWeight: '500',
               }}>
               {profileData.email}
             </Text>
-            <VStack space={1} alignItems="center" marginTop={'12'}>
+            <VStack space={1} alignItems="center" marginTop={'1'}>
               <Pressable onPress={() => setshowMore(!showMore)}>
                 <Center
                   w="56"
                   h="10"
-                  bg="indigo.700"
+                  bg="indigo.400"
                   rounded="xs"
                   shadow={3}
                   margin={'0.5'}>
@@ -426,7 +401,7 @@ const HomeScreen = props => {
                   <Center
                     w="56"
                     h="10"
-                    bg="indigo.700"
+                    bg="indigo.400"
                     rounded="xs"
                     shadow={3}
                     margin={'0.5'}>
@@ -444,7 +419,9 @@ const HomeScreen = props => {
             style={{
               height: 100,
               width: '100%',
-              backgroundColor: 'red',
+              backgroundColor: 'gray',
+              justifyContent: 'center',
+              alignItems: 'center',
             }}></View>
         </View>
       </Modal>
@@ -458,7 +435,7 @@ const HomeScreen = props => {
           Terminate App and Open it Again
         </Text>
       </AnimatedLoader>
-    </ScrollView>
+    </View>
   );
 };
 
