@@ -23,6 +23,8 @@ import React, {useEffect, useState} from 'react';
 import {useNavigation, useIsFocused} from '@react-navigation/native';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
+import firestore from '@react-native-firebase/firestore';
 
 const LoginScreen = ({route}) => {
   const tempNavigation = useNavigation();
@@ -35,6 +37,10 @@ const LoginScreen = ({route}) => {
     email: false,
     password: false,
   });
+  const [bools, setBools] = useState({
+    uniqueIdBool: true,
+  });
+  const [isConnected, setIsConnected] = useState(null);
   const email = route?.params?.email;
   useEffect(() => {
     if (email) {
@@ -54,6 +60,65 @@ const LoginScreen = ({route}) => {
       return () => backHandler.remove();
     }
   }, [isFocused]);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (state.isConnected !== isConnected) {
+        setIsConnected(state.isConnected);
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [isConnected]);
+
+  const fetchUserByUniqueId = async conditions => {
+    if (isConnected && bools.uniqueIdBool) {
+      let uniqueId = await DeviceInfo.getUniqueId();
+      let query = firestore().collection('user');
+      if (conditions?.email) {
+        query = query.where('email', '==', conditions?.email);
+      } else {
+        query = query.where('platform.uniqueId', '==', uniqueId);
+      }
+      query
+        .get()
+        .then(querySnapshot => {
+          if (!querySnapshot.empty) {
+            const user = querySnapshot.docs[0].data();
+            onVerified(user);
+          } else {
+            if (!conditions?.email) {
+              setBools(prevState => ({
+                ...prevState,
+                uniqueIdBool: false,
+              }));
+            }
+          }
+        })
+        .catch(error => {
+          console.log('Error getting user:', error);
+          return null;
+        });
+      if (isConnected && !conditions?.stop) {
+        fetchUserByUniqueId({stop: true});
+      }
+    }
+  };
+  const onVerified = async user => {
+    let newkeyemail = user.email + '.UserData';
+    try {
+      let inputDataString = JSON.stringify(user);
+      await AsyncStorage.setItem(newkeyemail, inputDataString);
+      await AsyncStorage.setItem('session', user.email);
+      let asyncresult = await AsyncStorage.getItem(newkeyemail);
+      if (asyncresult) {
+        tempNavigation.navigate('home', {email: user.email});
+      } else {
+        console.log('first toast');
+      }
+    } catch (error) {}
+  };
 
   const existUser = async email => {
     let asyncresult = await AsyncStorage.getItem(email);
@@ -100,6 +165,7 @@ const LoginScreen = ({route}) => {
   const onSubmitInputs = async data => {
     let validate;
     if (login.email && login.password) {
+      fetchUserByUniqueId({email: login.email});
       validate = validateInputs(data);
     } else {
       setError({

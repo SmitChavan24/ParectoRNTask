@@ -1,17 +1,4 @@
-import {
-  StyleSheet,
-  View,
-  StatusBar,
-  ScrollView,
-  Platform,
-  Image,
-  ActivityIndicator,
-  Dimensions,
-  Touchable,
-  TouchableOpacity,
-  TextInput,
-  BackHandler,
-} from 'react-native';
+import {View, StatusBar, ScrollView, Platform, BackHandler} from 'react-native';
 import {
   Popover,
   Box,
@@ -42,6 +29,7 @@ import globalColors from '../../utils/globalColors';
 import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import DeviceInfo from 'react-native-device-info';
 import {
   PERMISSIONS,
   RESULTS,
@@ -50,6 +38,9 @@ import {
   request,
 } from 'react-native-permissions';
 import {useNavigation, useIsFocused} from '@react-navigation/native';
+import NetInfo from '@react-native-community/netinfo';
+import firestore from '@react-native-firebase/firestore';
+import uuid from 'react-native-uuid';
 
 const FormMain = ({route}) => {
   const email = route?.params?.email;
@@ -58,6 +49,7 @@ const FormMain = ({route}) => {
     firstname: '',
     lastname: '',
     dob: '',
+    phone: '',
     gender: '',
     city: '',
     imageuri: '',
@@ -74,9 +66,7 @@ const FormMain = ({route}) => {
     checker: false,
   });
   const dataemail = useRef(email);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [checkbox, setCheckbox] = useState(false);
-  const storageKey = '@myApp:imageData';
   const tempNavigation = useNavigation();
   const isFocused = useIsFocused();
   const [isOpen, setIsOpen] = useState(false);
@@ -280,7 +270,41 @@ const FormMain = ({route}) => {
     setPopoverOpen(true);
     // You can save the data, navigate to the next screen, or perform other actions here
   };
+  console.log(data);
+  const addUser = async () => {
+    const userid = uuid.v4();
+    let uniqueId = await DeviceInfo.getUniqueId();
+
+    let details = {
+      os: Platform.OS,
+      brand: Platform.constants.Brand,
+      model: Platform.constants.Model,
+      version: Platform.constants.Release,
+      manufacturer: Platform.constants.Manufacturer,
+      uniqueId,
+    };
+    let insertdata = {
+      ...data,
+      email: dataemail.current,
+      platform: {
+        ...details,
+      },
+    };
+    firestore()
+      .collection('user')
+      .doc(userid)
+      .set(insertdata)
+      .then(res => {
+        console.log('Data successfully written:', res);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+    tempNavigation.navigate('home');
+  };
   const onFormComplete = async () => {
+    addUser();
+
     let newkeyemail = dataemail.current + '.UserData';
     console.log(newkeyemail);
     try {
@@ -408,6 +432,35 @@ const FormMain = ({route}) => {
                       fontSize: 'xs',
                     }}>
                     Error Last Name
+                  </FormControl.ErrorMessage>
+                </FormControl>
+                <FormControl isRequired isInvalid={error.phone}>
+                  <FormControl.Label
+                    _text={{
+                      bold: true,
+                      fontSize: 'md',
+                    }}>
+                    Mobile No
+                  </FormControl.Label>
+                  <Input
+                    placeholder="mobile no"
+                    onChangeText={value => onChangeInputs('phone', value)}
+                    size={'lg'}
+                    maxLength={10}
+                    keyboardType="numeric"
+                  />
+                  <FormControl.HelperText
+                    _text={{
+                      fontSize: 'xs',
+                      fontSize: 'md',
+                    }}>
+                    Mobile should contain atleast 10 number.
+                  </FormControl.HelperText>
+                  <FormControl.ErrorMessage
+                    _text={{
+                      fontSize: 'xs',
+                    }}>
+                    Error Mobile No
                   </FormControl.ErrorMessage>
                 </FormControl>
                 <FormControl maxW="300" isRequired isInvalid={error.dob}>
@@ -638,10 +691,10 @@ const FormMain = ({route}) => {
         isOpen={isOpen}
         onClose={onClose}>
         <AlertDialog.Content>
-          <AlertDialog.CloseButton />
-          <AlertDialog.Header>Exit Application</AlertDialog.Header>
+          {/* <AlertDialog.CloseButton /> */}
+          <AlertDialog.Header>Exit Application ?</AlertDialog.Header>
           <AlertDialog.Body>
-            This will remove all data relating to this form
+            You have to Fill the Form to Continue.
           </AlertDialog.Body>
           <AlertDialog.Footer>
             <Button.Group space={1}>
@@ -650,10 +703,10 @@ const FormMain = ({route}) => {
                 colorScheme="coolGray"
                 onPress={() => setIsOpen(false)}
                 ref={cancelRef}>
-                Cancel
+                Continue
               </Button>
               <Button colorScheme="danger" onPress={onClose}>
-                I Agree
+                Exit App
               </Button>
             </Button.Group>
           </AlertDialog.Footer>

@@ -17,16 +17,19 @@ import axios from 'axios';
 import {CloseIcon, Avatar} from 'native-base';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
+import firestore from '@react-native-firebase/firestore';
+import uuid from 'react-native-uuid';
 
 const HomeScreen = props => {
   const [News, setNews] = useState([]);
   const [apiError, setApiError] = useState(false);
-  const [modalVisible, setModalVisible] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
   const [bools, setbools] = useState({
     fetchMore: false,
     headlines: false,
     showheadlines: true,
   });
+  const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState([]);
   const [moreNews, setMoreNews] = useState([]);
   const [isConnected, setIsConnected] = useState(null);
@@ -50,6 +53,20 @@ const HomeScreen = props => {
       unsubscribe();
     };
   }, [isConnected]);
+
+  // const fetchAllUsers = async () => {
+  //   try {
+  //     const querySnapshot = await firestore().collection('user').get();
+  //     const users = [];
+  //     querySnapshot.forEach(doc => {
+  //       users.push({id: doc.id, ...doc.data()});
+  //     });
+  //     console.log(users);
+  //   } catch (error) {
+  //     console.log('Error getting users:', error);
+  //     return [];
+  //   }
+  // };
 
   const fetchProfile = async () => {
     let newkeyemail = await AsyncStorage.getItem('session');
@@ -284,7 +301,9 @@ const HomeScreen = props => {
           </Text>
         </TouchableOpacity>
       )}
-      {/* <Button title="press" onPress={() => setModalVisible(true)}></Button> */}
+      <Button
+        title="press"
+        onPress={() => props.navigation.navigate('login')}></Button>
       <Modal visible={modalVisible} animationType="none" transparent>
         <Pressable
           style={{

@@ -13,12 +13,14 @@ import {useNavigation} from '@react-navigation/native';
 import React, {useState, useRef} from 'react';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import firestore from '@react-native-firebase/firestore';
 
 const RegisterScreen = () => {
   const tempNavigation = useNavigation();
 
   const [errorfield, setError] = useState({
     email: false,
+    email_error_message: '',
     password: false,
     confirmpassword: false,
   });
@@ -32,7 +34,7 @@ const RegisterScreen = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     let regex = emailRegex.test(inputData.email);
     if (!regex) {
-      setError({email: true});
+      setError({email: true, email_error_message: 'email is not valid.'});
     } else {
       if (inputData.password.trim().length < 6) {
         setError({password: true});
@@ -49,16 +51,62 @@ const RegisterScreen = () => {
     }
     return 0;
   };
+
+  const fetchUserByUniqueId = async conditions => {
+    let query = firestore().collection('user');
+    if (conditions?.email) {
+      query = query.where('email', '==', conditions?.email);
+    }
+    return query
+      .get()
+      .then(querySnapshot => {
+        if (!querySnapshot.empty) {
+          const user = querySnapshot.docs[0].data();
+          console.log(user);
+          // onVerified(user);
+        } else {
+          return null;
+        }
+      })
+      .catch(error => {
+        console.log('Error getting user:', error);
+        return null;
+      });
+  };
+  // const onVerified = async user => {
+  //   console.log(user.email);
+  //   let newkeyemail = user.email + '.UserData';
+  //   try {
+  //     let inputDataString = JSON.stringify(user);
+  //     await AsyncStorage.setItem(newkeyemail, inputDataString);
+  //     await AsyncStorage.setItem('session', user.email);
+  //     let asyncresult = await AsyncStorage.getItem(newkeyemail);
+  //     if (asyncresult) {
+  //       tempNavigation.navigate('home', {email: user.email});
+  //     } else {
+  //       console.log('first toast');
+  //     }
+  //   } catch (error) {}
+  // };
   const onSubmitInputs = async data => {
     let validate = validateInputs(data);
     console.log(inputData, '<<<=data-error=>>>', errorfield);
     if (validate === 1) {
+      fetchUserByUniqueId(inputData);
       try {
         let inputDataString = JSON.stringify(inputData);
         let asyncresult = await AsyncStorage.getItem(inputData.email);
         if (asyncresult) {
-          console.log('first toast');
+          console.log('first toast', console.log(asyncresult));
+          setError({
+            email: true,
+            email_error_message: 'email already used. Please try another',
+          });
         } else {
+          setError({
+            email: false,
+            email_error_message: '',
+          });
           await AsyncStorage.setItem(inputData.email, inputDataString);
           tempNavigation.navigate('login', {email: inputData.email});
         }
@@ -133,7 +181,7 @@ const RegisterScreen = () => {
                     _text={{
                       fontSize: 'xs',
                     }}>
-                    email is not valid.
+                    {errorfield.email_error_message}
                   </FormControl.ErrorMessage>
                 </FormControl>
                 <FormControl isRequired isInvalid={errorfield.password}>
