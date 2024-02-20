@@ -14,7 +14,7 @@ const SplashScreen = () => {
   }, []);
   const CheckIfRegistered = async () => {
     let asyncresult = await AsyncStorage.getItem('session');
-    console.log(asyncresult);
+    // console.log(asyncresult);
 
     if (asyncresult) {
       tempNavigation.navigate('home', {email: asyncresult});

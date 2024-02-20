@@ -7,11 +7,21 @@ import {
   Text,
   Image,
   View,
+  BackHandler,
+  TextInput,
   TouchableOpacity,
+  LogBox,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import axios from 'axios';
-import {VStack, Avatar, Center, Modal} from 'native-base';
+import {
+  VStack,
+  Avatar,
+  Center,
+  Modal,
+  useClipboard,
+  useToast,
+} from 'native-base';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import firestore from '@react-native-firebase/firestore';
@@ -19,6 +29,7 @@ import AnimatedLoader from 'react-native-animated-loader';
 import RNFS from 'react-native-fs';
 import {launchImageLibrary} from 'react-native-image-picker';
 import playstore from '../../assets/playstore.png';
+import {useNavigation, useIsFocused} from '@react-navigation/native';
 
 const mapData = [
   {id: 1, name: 'Sports', url: 'https://sports.ndtv.com/'},
@@ -58,7 +69,11 @@ const HomeScreen = props => {
   const [profileData, setProfileData] = useState([]);
   const [moreNews, setMoreNews] = useState([]);
   const [isConnected, setIsConnected] = useState(null);
+  const [exitApp, SetExitApp] = useState(false);
   const flatListRef = useRef(null);
+  const {value, onCopy} = useClipboard();
+  const isFocused = useIsFocused();
+  const toast = useToast();
 
   const fallbackImage =
     'https://st2.depositphotos.com/2059749/8311/i/950/depositphotos_83118644-stock-photo-3d-paper-plane-out-of.jpg';
@@ -66,7 +81,13 @@ const HomeScreen = props => {
   useEffect(() => {
     fetchNews();
     fetchProfile();
+    LogBox.ignoreAllLogs();
+    LogBox.ignoreLogs(['EventEmitter.removeListener']);
+    LogBox.ignoreLogs(['Require cycle: node_modules/']);
   }, []);
+  const onClose = () => {
+    BackHandler.exitApp();
+  };
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -78,6 +99,34 @@ const HomeScreen = props => {
       unsubscribe();
     };
   }, [isConnected]);
+
+  const backAction = () => {
+    if (exitApp == false) {
+      SetExitApp(true);
+      toast.show({
+        title: 'Please Back Again To Exit',
+        variant: 'top-accent',
+        placement: 'bottom',
+      });
+    } else if (exitApp == true) {
+      BackHandler.exitApp();
+    }
+
+    setTimeout(() => {
+      SetExitApp(false);
+    }, 1500);
+    return true;
+  };
+
+  useEffect(() => {
+    if (isFocused) {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction,
+      );
+      return () => backHandler.remove();
+    }
+  }, [exitApp, isFocused]);
 
   const pickImage = async e => {
     e.preventDefault();
@@ -117,18 +166,6 @@ const HomeScreen = props => {
       asyncresult = JSON.parse(asyncresult);
       let wholeData = {...asyncresult, email};
       setProfileData(wholeData);
-    }
-    try {
-      if (profileData?.imageuri && !condition?.fromimage) {
-        let imageuri = profileData?.imageuri;
-        let exists = await RNFS.exists(imageuri);
-        console.log(exists);
-        if (!exists) {
-          setImage(newkeyemail, '');
-        }
-      }
-    } catch (error) {
-      console.log(error, 'errror smit');
     }
   };
 
@@ -194,8 +231,9 @@ const HomeScreen = props => {
       }));
     }
   };
-  const imageSource =
-    profileData?.imageuri !== '' ? {uri: profileData?.imageuri} : playstore;
+  const imageSource = profileData?.imageuri
+    ? {uri: profileData?.imageuri}
+    : playstore;
 
   const RenderItem = (item, index) => {
     return (
@@ -317,8 +355,7 @@ const HomeScreen = props => {
             borderWidth: 1,
             borderColor: 'grey',
           }}
-          // onPress={FetchMoreNews}
-        >
+          onPress={FetchMoreNews}>
           <Text style={{color: 'black', fontSize: 12, fontWeight: '500'}}>
             Show More
           </Text>
@@ -352,9 +389,9 @@ const HomeScreen = props => {
           </Text>
         </TouchableOpacity>
       )}
-      <Button
+      {/* <Button
         title="press"
-        onPress={() => props.navigation.navigate('login')}></Button>
+        onPress={() => props.navigation.navigate('login')}></Button> */}
       <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)}>
         <View
           style={{
@@ -456,12 +493,26 @@ const HomeScreen = props => {
           </ScrollView>
           <View
             style={{
-              height: 100,
               width: '100%',
               backgroundColor: 'gray',
               justifyContent: 'center',
               alignItems: 'center',
-            }}></View>
+              paddingBottom: '5%',
+            }}>
+            <Text style={{color: 'black', fontSize: 32}}>DONATE US</Text>
+
+            <TouchableOpacity onPress={() => onCopy('8104287670@ybl')}>
+              <TextInput
+                style={{color: 'black', fontSize: 18}}
+                value="UPI ID:- 8104287670@ybl"
+                editable={false}></TextInput>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onCopy('8104287670')}>
+              <Text style={{color: 'black', fontSize: 18}}>
+                {'Mobile Number:- 8104287670'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
       <AnimatedLoader
