@@ -52,52 +52,15 @@ const RegisterScreen = () => {
     return 0;
   };
 
-  const fetchUserByUniqueId = async conditions => {
-    let query = firestore().collection('user');
-    if (conditions?.email) {
-      query = query.where('email', '==', conditions?.email);
-    }
-    return query
-      .get()
-      .then(querySnapshot => {
-        if (!querySnapshot.empty) {
-          const user = querySnapshot.docs[0].data();
-          console.log(user);
-          // onVerified(user);
-        } else {
-          return null;
-        }
-      })
-      .catch(error => {
-        console.log('Error getting user:', error);
-        return null;
-      });
-  };
-  // const onVerified = async user => {
-  //   console.log(user.email);
-  //   let newkeyemail = user.email + '.UserData';
-  //   try {
-  //     let inputDataString = JSON.stringify(user);
-  //     await AsyncStorage.setItem(newkeyemail, inputDataString);
-  //     await AsyncStorage.setItem('session', user.email);
-  //     let asyncresult = await AsyncStorage.getItem(newkeyemail);
-  //     if (asyncresult) {
-  //       tempNavigation.navigate('home', {email: user.email});
-  //     } else {
-  //       console.log('first toast');
-  //     }
-  //   } catch (error) {}
-  // };
   const onSubmitInputs = async data => {
     let validate = validateInputs(data);
-    console.log(inputData, '<<<=data-error=>>>', errorfield);
+    // console.log(inputData, '<<<=data-error=>>>', errorfield);
     if (validate === 1) {
-      fetchUserByUniqueId(inputData);
       try {
         let inputDataString = JSON.stringify(inputData);
         let asyncresult = await AsyncStorage.getItem(inputData.email);
         if (asyncresult) {
-          console.log('first toast', console.log(asyncresult));
+          // console.log('first toast', console.log(asyncresult));
           setError({
             email: true,
             email_error_message: 'email already used. Please try another',

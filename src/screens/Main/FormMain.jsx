@@ -78,14 +78,14 @@ const FormMain = ({route}) => {
   const cancelRef = useRef(null);
 
   useEffect(() => {
-    requestCameraPermission();
+    // requestCameraPermission();
   }, []);
 
   const backAction = () => {
     if (!isOpen) {
       setIsOpen(!isOpen);
     } else if (isOpen) {
-      console.log('hii');
+      // console.log('hii');
     }
     setTimeout(() => {
       setIsOpen(!isOpen);
@@ -270,7 +270,7 @@ const FormMain = ({route}) => {
     setPopoverOpen(true);
     // You can save the data, navigate to the next screen, or perform other actions here
   };
-  console.log(data);
+  // console.log(data);
   const addUser = async () => {
     const userid = uuid.v4();
     let uniqueId = await DeviceInfo.getUniqueId();
@@ -306,7 +306,7 @@ const FormMain = ({route}) => {
     addUser();
 
     let newkeyemail = dataemail.current + '.UserData';
-    console.log(newkeyemail);
+    // console.log(newkeyemail);
     try {
       let inputDataString = JSON.stringify(data);
       await AsyncStorage.setItem(newkeyemail, inputDataString);

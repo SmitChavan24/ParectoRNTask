@@ -3,18 +3,33 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Button,
   Text,
   Image,
   View,
+  BackHandler,
+  TextInput,
   TouchableOpacity,
+  LogBox,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import axios from 'axios';
-import {VStack, Avatar, Center, Modal} from 'native-base';
+import {
+  VStack,
+  Avatar,
+  Center,
+  Modal,
+  useClipboard,
+  useToast,
+} from 'native-base';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import firestore from '@react-native-firebase/firestore';
 import AnimatedLoader from 'react-native-animated-loader';
+import RNFS from 'react-native-fs';
+import {launchImageLibrary} from 'react-native-image-picker';
+import playstore from '../../assets/playstore.png';
+import {useNavigation, useIsFocused} from '@react-navigation/native';
 
 const mapData = [
   {id: 1, name: 'Sports', url: 'https://sports.ndtv.com/'},
@@ -44,18 +59,21 @@ const HomeScreen = props => {
   const [News, setNews] = useState([]);
   const [apiError, setApiError] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [imageexists, setImageexists] = useState(false);
   const [bools, setbools] = useState({
     fetchMore: false,
     headlines: false,
     showheadlines: true,
   });
   const [showMore, setshowMore] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState([]);
   const [moreNews, setMoreNews] = useState([]);
   const [isConnected, setIsConnected] = useState(null);
+  const [exitApp, SetExitApp] = useState(false);
   const flatListRef = useRef(null);
+  const {value, onCopy} = useClipboard();
+  const isFocused = useIsFocused();
+  const toast = useToast();
 
   const fallbackImage =
     'https://st2.depositphotos.com/2059749/8311/i/950/depositphotos_83118644-stock-photo-3d-paper-plane-out-of.jpg';
@@ -63,7 +81,13 @@ const HomeScreen = props => {
   useEffect(() => {
     fetchNews();
     fetchProfile();
+    LogBox.ignoreAllLogs();
+    LogBox.ignoreLogs(['EventEmitter.removeListener']);
+    LogBox.ignoreLogs(['Require cycle: node_modules/']);
   }, []);
+  const onClose = () => {
+    BackHandler.exitApp();
+  };
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -76,24 +100,67 @@ const HomeScreen = props => {
     };
   }, [isConnected]);
 
-  // const fetchAllUsers = async () => {
-  //   try {
-  //     const querySnapshot = await firestore().collection('user').get();
-  //     const users = [];
-  //     querySnapshot.forEach(doc => {
-  //       users.push({id: doc.id, ...doc.data()});
-  //     });
-  //     console.log(users);
-  //   } catch (error) {
-  //     console.log('Error getting users:', error);
-  //     return [];
-  //   }
-  // };
+  const backAction = () => {
+    if (exitApp == false) {
+      SetExitApp(true);
+      toast.show({
+        title: 'Please Back Again To Exit',
+        variant: 'top-accent',
+        placement: 'bottom',
+      });
+    } else if (exitApp == true) {
+      BackHandler.exitApp();
+    }
 
-  const fetchProfile = async () => {
+    setTimeout(() => {
+      SetExitApp(false);
+    }, 1500);
+    return true;
+  };
+
+  useEffect(() => {
+    if (isFocused) {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction,
+      );
+      return () => backHandler.remove();
+    }
+  }, [exitApp, isFocused]);
+
+  const pickImage = async e => {
+    e.preventDefault();
+    const options = {
+      mediaType: 'photo',
+      includeBase64: false,
+      maxHeight: 2000,
+      maxWidth: 2000,
+    };
+
+    launchImageLibrary(options, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.error) {
+        console.log('Image picker error: ', response.error);
+      } else {
+        let imagUri = response.uri || response.assets?.[0]?.uri;
+        let newkeyemail = profileData?.email + '.UserData';
+        setImage(newkeyemail, imagUri);
+      }
+    });
+  };
+  const setImage = async (email, image) => {
+    let currentProfileData = {...profileData};
+    currentProfileData.imageuri = image;
+    let inputDataString = JSON.stringify(currentProfileData);
+    await AsyncStorage.setItem(email, inputDataString);
+    fetchProfile({fromimage: true});
+  };
+
+  const fetchProfile = async condition => {
     let newkeyemail = await AsyncStorage.getItem('session');
+    let email = newkeyemail;
     if (newkeyemail) {
-      let email = newkeyemail;
       newkeyemail = newkeyemail + '.UserData';
       let asyncresult = await AsyncStorage.getItem(newkeyemail);
       asyncresult = JSON.parse(asyncresult);
@@ -131,7 +198,6 @@ const HomeScreen = props => {
       });
     }
   };
-
   const FetchMoreNews = async () => {
     let currentDate = new Date();
     let oneDayBefore = new Date(currentDate);
@@ -147,7 +213,6 @@ const HomeScreen = props => {
         setMoreNews(response?.data?.articles);
         setbools({headlines: true, fetchMore: false, showheadlines: false});
         scrollFlatListToStart();
-        // console.log(response.data.totalResults);
       }
     } catch (error) {
       console.log(error);
@@ -166,6 +231,9 @@ const HomeScreen = props => {
       }));
     }
   };
+  const imageSource = profileData?.imageuri
+    ? {uri: profileData?.imageuri}
+    : playstore;
 
   const RenderItem = (item, index) => {
     return (
@@ -226,8 +294,6 @@ const HomeScreen = props => {
         style={{
           width: '100%',
           backgroundColor: 'white',
-          // alignItems: 'center',
-          // justifyContent: 'center',
         }}>
         <View
           style={{
@@ -241,12 +307,7 @@ const HomeScreen = props => {
               marginHorizontal: '3%',
             }}
             onPress={openModal}>
-            <Avatar
-              bg="amber.500"
-              source={{
-                uri: profileData?.imageuri,
-              }}
-              size="md">
+            <Avatar bg="amber.500" source={imageSource} size="md">
               NB
               <Avatar.Badge bg={isConnected ? 'green.500' : 'blueGray.800'} />
             </Avatar>
@@ -294,8 +355,7 @@ const HomeScreen = props => {
             borderWidth: 1,
             borderColor: 'grey',
           }}
-          // onPress={FetchMoreNews}
-        >
+          onPress={FetchMoreNews}>
           <Text style={{color: 'black', fontSize: 12, fontWeight: '500'}}>
             Show More
           </Text>
@@ -351,13 +411,29 @@ const HomeScreen = props => {
               style={{
                 alignSelf: 'center',
                 marginTop: '25%',
-                marginBottom: '10%',
                 color: 'grey',
                 fontSize: 18,
                 fontWeight: '500',
               }}>
               {profileData.email}
             </Text>
+            <Pressable
+              style={{
+                alignSelf: 'center',
+                marginBottom: '10%',
+                marginTop: '5%',
+                backgroundColor: 'white',
+              }}
+              onPress={pickImage}>
+              <Avatar
+                bg="amber.500"
+                source={imageSource}
+                style={{shadowColor: 'black', elevation: 10}}
+                size="xl">
+                NB
+                <Avatar.Badge bg={'blueGray.400'} rounded={'none'} />
+              </Avatar>
+            </Pressable>
             <VStack space={1} alignItems="center" marginTop={'1'}>
               <Pressable onPress={() => setshowMore(!showMore)}>
                 <Center
@@ -417,12 +493,26 @@ const HomeScreen = props => {
           </ScrollView>
           <View
             style={{
-              height: 100,
               width: '100%',
               backgroundColor: 'gray',
               justifyContent: 'center',
               alignItems: 'center',
-            }}></View>
+              paddingBottom: '5%',
+            }}>
+            <Text style={{color: 'black', fontSize: 32}}>DONATE US</Text>
+
+            <TouchableOpacity onPress={() => onCopy('8104287670@ybl')}>
+              <TextInput
+                style={{color: 'black', fontSize: 18}}
+                value="UPI ID:- 8104287670@ybl"
+                editable={false}></TextInput>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onCopy('8104287670')}>
+              <Text style={{color: 'black', fontSize: 18}}>
+                {'Mobile Number:- 8104287670'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
       <AnimatedLoader
