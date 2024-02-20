@@ -28,11 +28,13 @@
     "react-native-image-picker": "^7.1.0",
     "react-native-modal-datetime-picker": "^17.1.0",
     "react-native-permissions": "^4.0.0",
+    "react-native-rename": "^3.2.14",
     "react-native-safe-area-context": "^3.3.2",
     "react-native-screens": "^3.29.0",
     "react-native-splash-screen": "^3.3.0",
     "react-native-svg": "^12.1.1",
     "react-native-uuid": "^2.0.1",
+    "react-native-version": "^4.0.0",
     "react-native-webview": "^13.8.1"
   },
   "devDependencies": {
