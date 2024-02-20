@@ -23,6 +23,9 @@ import React, {useEffect, useState} from 'react';
 import {useNavigation, useIsFocused} from '@react-navigation/native';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
+import firestore from '@react-native-firebase/firestore';
+import AnimatedLoader from 'react-native-animated-loader';
 
 const LoginScreen = ({route}) => {
   const tempNavigation = useNavigation();
@@ -35,6 +38,11 @@ const LoginScreen = ({route}) => {
     email: false,
     password: false,
   });
+  const [bools, setBools] = useState({
+    uniqueIdBool: true,
+    modalNet: false,
+  });
+  const [isConnected, setIsConnected] = useState(null);
   const email = route?.params?.email;
   useEffect(() => {
     if (email) {
@@ -54,6 +62,65 @@ const LoginScreen = ({route}) => {
       return () => backHandler.remove();
     }
   }, [isFocused]);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (state.isConnected !== isConnected) {
+        setIsConnected(state.isConnected);
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [isConnected]);
+
+  const fetchUserByUniqueId = async conditions => {
+    if (isConnected && bools.uniqueIdBool) {
+      let uniqueId = await DeviceInfo.getUniqueId();
+      let query = firestore().collection('user');
+      if (conditions?.email) {
+        query = query.where('email', '==', conditions?.email);
+      } else {
+        query = query.where('platform.uniqueId', '==', uniqueId);
+      }
+      query
+        .get()
+        .then(querySnapshot => {
+          if (!querySnapshot.empty) {
+            const user = querySnapshot.docs[0].data();
+            onVerified(user);
+          } else {
+            if (!conditions?.email) {
+              setBools(prevState => ({
+                ...prevState,
+                uniqueIdBool: false,
+              }));
+            }
+          }
+        })
+        .catch(error => {
+          console.log('Error getting user:', error);
+          return null;
+        });
+      if (isConnected && !conditions?.stop) {
+        fetchUserByUniqueId({stop: true});
+      }
+    }
+  };
+  const onVerified = async user => {
+    let newkeyemail = user.email + '.UserData';
+    try {
+      let inputDataString = JSON.stringify(user);
+      await AsyncStorage.setItem(newkeyemail, inputDataString);
+      await AsyncStorage.setItem('session', user.email);
+      let asyncresult = await AsyncStorage.getItem(newkeyemail);
+      if (asyncresult) {
+        tempNavigation.navigate('home', {email: user.email});
+      } else {
+        console.log('first toast');
+      }
+    } catch (error) {}
+  };
 
   const existUser = async email => {
     let asyncresult = await AsyncStorage.getItem(email);
@@ -100,6 +167,7 @@ const LoginScreen = ({route}) => {
   const onSubmitInputs = async data => {
     let validate;
     if (login.email && login.password) {
+      fetchUserByUniqueId({email: login.email});
       validate = validateInputs(data);
     } else {
       setError({
@@ -117,6 +185,13 @@ const LoginScreen = ({route}) => {
 
   return (
     <View style={{flex: 1}}>
+      <AnimatedLoader
+        visible={!isConnected}
+        overlayColor="grey"
+        source={require('../../assets/network.json')}
+        animationStyle={styles.lottie}
+        speed={0.4}
+      />
       <StatusBar backgroundColor="lightblue" barStyle="dark-content" />
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -133,15 +208,15 @@ const LoginScreen = ({route}) => {
         ]}>
         <View>
           <Center w="100%">
-            <Box safeArea p="1" py="40" w="90%" maxW="290">
+            <Box safeArea p="1" py="40" w="90%" maxW="350">
               <Heading
-                size="lg"
+                size="xl"
                 fontWeight="600"
                 color="coolGray.800"
                 _dark={{
                   color: 'warmGray.50',
                 }}>
-                Welcome to Peracto Infotech
+                Welcome to Zatpat News
               </Heading>
               <Heading
                 mt="1"
@@ -150,15 +225,18 @@ const LoginScreen = ({route}) => {
                 }}
                 color="coolGray.600"
                 fontWeight="medium"
-                size="xs">
+                size="md">
                 Log in to continue!
               </Heading>
 
-              <VStack space={3} mt="5">
+              <VStack space={5} mt="5">
                 <FormControl isInvalid={errorfield.email}>
-                  <FormControl.Label>Email ID</FormControl.Label>
+                  <FormControl.Label _text={{fontSize: 'lg'}}>
+                    Email ID
+                  </FormControl.Label>
                   <Input
                     value={login.email}
+                    size={'2xl'}
                     onChangeText={text => onChangeInputs('email', text)}
                   />
                   <FormControl.ErrorMessage
@@ -169,12 +247,21 @@ const LoginScreen = ({route}) => {
                   </FormControl.ErrorMessage>
                 </FormControl>
                 <FormControl isInvalid={errorfield.password}>
-                  <FormControl.Label>Password</FormControl.Label>
+                  <FormControl.Label _text={{fontSize: 'lg'}}>
+                    Password
+                  </FormControl.Label>
                   <Input
+                    size={'2xl'}
                     type="password"
                     value={login.password}
                     onChangeText={text => onChangeInputs('password', text)}
                   />
+                  <FormControl.HelperText
+                    _text={{
+                      fontSize: 'md',
+                    }}>
+                    password minimum length should be 6.
+                  </FormControl.HelperText>
                   <FormControl.ErrorMessage
                     _text={{
                       fontSize: 'xs',
@@ -188,6 +275,7 @@ const LoginScreen = ({route}) => {
                     login.email && login?.password?.length > 5 ? false : true
                   }
                   mt="2"
+                  size={'lg'}
                   style={{
                     backgroundColor:
                       login.email && login?.password?.length > 5
@@ -201,7 +289,7 @@ const LoginScreen = ({route}) => {
                 </Button>
                 <HStack mt="6" justifyContent="center">
                   <Text
-                    fontSize="sm"
+                    fontSize="lg"
                     color="coolGray.600"
                     _dark={{
                       color: 'warmGray.200',
@@ -212,7 +300,8 @@ const LoginScreen = ({route}) => {
                     _text={{
                       color: 'indigo.500',
                       fontWeight: 'medium',
-                      fontSize: 'sm',
+                      fontSize: 'lg',
+                      marginLeft: '1',
                     }}
                     onPress={() => {
                       setError({});
@@ -232,4 +321,9 @@ const LoginScreen = ({route}) => {
 
 export default LoginScreen;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  lottie: {
+    width: 200,
+    height: 200,
+  },
+});

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "598366437324",
+    "project_id": "newsapi-d3f95",
+    "storage_bucket": "newsapi-d3f95.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:598366437324:android:c5f6dce56d3c7698e12769",
+        "android_client_info": {
+          "package_name": "com.peracto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAs0zLcGvb5NpagN6QlOYonCsM2pXje5-w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
