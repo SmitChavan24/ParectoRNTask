@@ -3,6 +3,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Button,
   Text,
   Image,
   View,
@@ -17,6 +18,8 @@ import firestore from '@react-native-firebase/firestore';
 import AnimatedLoader from 'react-native-animated-loader';
 import RNFS from 'react-native-fs';
 import {launchImageLibrary} from 'react-native-image-picker';
+import playstore from '../../assets/playstore.png';
+
 const mapData = [
   {id: 1, name: 'Sports', url: 'https://sports.ndtv.com/'},
   {
@@ -99,27 +102,33 @@ const HomeScreen = props => {
   };
   const setImage = async (email, image) => {
     let currentProfileData = {...profileData};
-    currentProfileData.imagUri = image;
+    currentProfileData.imageuri = image;
     let inputDataString = JSON.stringify(currentProfileData);
     await AsyncStorage.setItem(email, inputDataString);
-    setProfileData(currentProfileData);
-    setImageexists(true);
+    fetchProfile({fromimage: true});
   };
-  console.log(profileData);
-  const fetchProfile = async () => {
+
+  const fetchProfile = async condition => {
     let newkeyemail = await AsyncStorage.getItem('session');
+    let email = newkeyemail;
     if (newkeyemail) {
-      let email = newkeyemail;
       newkeyemail = newkeyemail + '.UserData';
       let asyncresult = await AsyncStorage.getItem(newkeyemail);
       asyncresult = JSON.parse(asyncresult);
       let wholeData = {...asyncresult, email};
       setProfileData(wholeData);
     }
-    let imageuri = profileData?.imageuri;
-    let exists = await RNFS.exists(imageuri);
-    if (exists) {
-      setImageexists(true);
+    try {
+      if (profileData?.imageuri && !condition?.fromimage) {
+        let imageuri = profileData?.imageuri;
+        let exists = await RNFS.exists(imageuri);
+        console.log(exists);
+        if (!exists) {
+          setImage(newkeyemail, '');
+        }
+      }
+    } catch (error) {
+      console.log(error, 'errror smit');
     }
   };
 
@@ -167,7 +176,6 @@ const HomeScreen = props => {
         setMoreNews(response?.data?.articles);
         setbools({headlines: true, fetchMore: false, showheadlines: false});
         scrollFlatListToStart();
-        // console.log(response.data.totalResults);
       }
     } catch (error) {
       console.log(error);
@@ -186,6 +194,8 @@ const HomeScreen = props => {
       }));
     }
   };
+  const imageSource =
+    profileData?.imageuri !== '' ? {uri: profileData?.imageuri} : playstore;
 
   const RenderItem = (item, index) => {
     return (
@@ -246,8 +256,6 @@ const HomeScreen = props => {
         style={{
           width: '100%',
           backgroundColor: 'white',
-          // alignItems: 'center',
-          // justifyContent: 'center',
         }}>
         <View
           style={{
@@ -261,22 +269,10 @@ const HomeScreen = props => {
               marginHorizontal: '3%',
             }}
             onPress={openModal}>
-            {imageexists ? (
-              <Avatar
-                bg="amber.500"
-                source={{
-                  uri: profileData?.imageuri,
-                }}
-                size="md">
-                NB
-                <Avatar.Badge bg={isConnected ? 'green.500' : 'blueGray.800'} />
-              </Avatar>
-            ) : (
-              <Avatar bg="amber.500" size="md">
-                NB
-                <Avatar.Badge bg={isConnected ? 'green.500' : 'blueGray.800'} />
-              </Avatar>
-            )}
+            <Avatar bg="amber.500" source={imageSource} size="md">
+              NB
+              <Avatar.Badge bg={isConnected ? 'green.500' : 'blueGray.800'} />
+            </Avatar>
           </TouchableOpacity>
           <Text
             style={{
@@ -356,9 +352,9 @@ const HomeScreen = props => {
           </Text>
         </TouchableOpacity>
       )}
-      {/* <Button
+      <Button
         title="press"
-        onPress={() => props.navigation.navigate('login')}></Button> */}
+        onPress={() => props.navigation.navigate('login')}></Button>
       <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)}>
         <View
           style={{
@@ -392,26 +388,14 @@ const HomeScreen = props => {
                 backgroundColor: 'white',
               }}
               onPress={pickImage}>
-              {imageexists ? (
-                <Avatar
-                  bg="amber.500"
-                  source={{
-                    uri: profileData?.imageuri,
-                  }}
-                  style={{shadowColor: 'black', elevation: 10}}
-                  size="xl">
-                  NB
-                  <Avatar.Badge bg={'blueGray.400'} rounded={'none'} />
-                </Avatar>
-              ) : (
-                <Avatar
-                  bg="amber.500"
-                  style={{shadowColor: 'black', elevation: 10}}
-                  size="xl">
-                  NB
-                  <Avatar.Badge bg={'blueGray.400'} rounded={'none'} />
-                </Avatar>
-              )}
+              <Avatar
+                bg="amber.500"
+                source={imageSource}
+                style={{shadowColor: 'black', elevation: 10}}
+                size="xl">
+                NB
+                <Avatar.Badge bg={'blueGray.400'} rounded={'none'} />
+              </Avatar>
             </Pressable>
             <VStack space={1} alignItems="center" marginTop={'1'}>
               <Pressable onPress={() => setshowMore(!showMore)}>
