@@ -19,40 +19,26 @@ import {
   HStack,
   Center,
   Avatar,
+  Container,
+  AspectRatio,
+  Image,
+  Stack,
+  Spacer,
 } from 'native-base';
-import React, {useEffect, useState, useRef} from 'react';
-import {useNavigation} from '@react-navigation/native';
-import DeviceInfo from 'react-native-device-info';
+import React, { useEffect, useState, useRef } from 'react';
 import paddingHelper from '../../utils/paddingHelper';
 import globalColors from '../../utils/globalColors';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const {width, height} = Dimensions.get('window');
 
-const ProfileScreen = ({route}) => {
-  const email = route?.params?.email;
-  const dataemail = useRef(email);
-  const tempNavigation = useNavigation();
-  const [data, setdata] = useState({});
-  useEffect(() => {
-    getDatafromStorage();
-  }, []);
-  const getDatafromStorage = async () => {
-    let newkeyemail = '';
-    if (dataemail) {
-      newkeyemail = dataemail.current + '.UserData';
-    } else {
-      newkeyemail = await AsyncStorage.getItem('session');
-    }
-    let asyncresult = await AsyncStorage.getItem(newkeyemail);
-    asyncresult = JSON.parse(asyncresult);
-    let wholeData = {...asyncresult, email: dataemail.current};
-    console.log(wholeData, 'asyncw result in home');
+const { width, height } = Dimensions.get('window');
 
-    setdata(wholeData);
-  };
+const ProfileScreen = ({ route }) => {
+  const data = route?.params?.data;
+  const randomId = Math.floor(Math.random() * 1000);
+
+
   return (
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1 }}>
       <StatusBar backgroundColor="lightblue" barStyle="dark-content" />
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -61,50 +47,247 @@ const ProfileScreen = ({route}) => {
             paddingTop: paddingHelper(),
           },
         ]}>
-        <Avatar
-          bg="green.500"
-          source={{
-            uri: data.imageuri,
-          }}
-          size={'2xl'}
-          alignSelf={'center'}
-          margin={'5%'}>
-          AJ
-        </Avatar>
-        <View style={styles.detailsContainer}>
-          <View style={styles.detailHeader}>
-            <Text>{'Personal Details'}</Text>
-          </View>
-          <View style={styles.table}>
-            <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'First Name'}</Text>
-              <Text style={styles.valueText}>{data.firstname}</Text>
-            </View>
-            <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'Last Name'}</Text>
-              <Text style={styles.valueText}>{data.lastname}</Text>
-            </View>
-            <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'Date of Birth'}</Text>
-              <Text style={styles.valueText}>{data.dob}</Text>
-            </View>
-            <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'Email Id'}</Text>
-              <Text style={styles.valueText}>{data.email}</Text>
-            </View>
-            <View style={styles.flexrow}>
-              <Text style={styles.labelText}>{'Gender'}</Text>
-              <Text style={styles.valueText}>{data.gender}</Text>
-            </View>
-          </View>
-        </View>
+        <Box alignItems="center" mt={10}>
+          <Box maxW={'full'} rounded="lg" overflow="hidden" mx={5} borderColor="coolGray.200" borderWidth="1" _dark={{
+            borderColor: "coolGray.600",
+            backgroundColor: "gray.700"
+          }} _web={{
+            shadow: 2,
+            borderWidth: 0
+          }} _light={{
+            backgroundColor: "gray.50"
+          }}>
+            <Box>
+              <AspectRatio w="100%" ratio={16 / 9}>
+                <Image source={{
+                  uri: `https://picsum.photos/id/${randomId}/300/200`
+                }} alt="image" />
+              </AspectRatio>
+              <Center bg="violet.500" _dark={{
+                bg: "violet.400"
+              }} _text={{
+                color: "warmGray.50",
+                fontWeight: "700",
+                fontSize: "xs"
+              }} position="absolute" bottom="0" px="3" py="1.5">
+                Profile
+              </Center>
+            </Box>
+            <Stack p="4" space={3}>
+              <Stack space={2}>
+                <Heading size="md" ml="-1">
+                  User Details
+                </Heading>
+                <Text fontSize="xs" _light={{
+                  color: "violet.500"
+                }} _dark={{
+                  color: "violet.400"
+                }} fontWeight="500" ml="-0.5" mt="-1">
+                  {data.name}
+                </Text>
+              </Stack>
+              <VStack>
+                <HStack alignItems="center">
+                  <Text color="coolGray.600" _dark={{
+                    color: "warmGray.200"
+                  }} fontWeight="400">
+                    Username
+                  </Text>
+                  <Spacer />
+                  <Text color="coolGray.600" _dark={{
+                    color: "warmGray.200"
+                  }} fontWeight="400">
+                    {data.username}
+                  </Text>
+                </HStack>
+                <HStack alignItems="center">
+                  <Text color="coolGray.600" _dark={{
+                    color: "warmGray.200"
+                  }} fontWeight="400">
+                    Email
+                  </Text>
+                  <Spacer />
+                  <Text color="coolGray.600" _dark={{
+                    color: "warmGray.200"
+                  }} fontWeight="400">
+                    {data.email}
+                  </Text>
+                </HStack>
+                <HStack alignItems="center">
+                  <Text color="coolGray.600" _dark={{
+                    color: "warmGray.200"
+                  }} fontWeight="400">
+                    Phone
+                  </Text>
+                  <Spacer />
+                  <Text color="coolGray.600" _dark={{
+                    color: "warmGray.200"
+                  }} fontWeight="400">
+                    {data.phone}
+                  </Text>
+                </HStack>
+
+                <Box maxW='container' rounded="lg" overflow="hidden" p={1} mt={1} borderColor="coolGray.200" borderWidth="1" _dark={{
+                  borderColor: "coolGray.600",
+                  backgroundColor: "gray.700"
+                }} _web={{
+                  shadow: 2,
+                  borderWidth: 0
+                }} _light={{
+                  backgroundColor: "gray.50"
+                }}>
+
+                  <Heading size='xs' > Address</Heading>
+                  <HStack alignItems="center">
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      Street
+                    </Text>
+                    <Spacer />
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      {data.address.street}
+                    </Text>
+                  </HStack>
+
+                  <HStack alignItems="center">
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      Suite
+                    </Text>
+                    <Spacer />
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      {data.address.suite}
+                    </Text>
+                  </HStack>
+                  <HStack alignItems="center">
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      City
+                    </Text>
+                    <Spacer />
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      {data.address.city}
+                    </Text>
+                  </HStack>
+                  <HStack alignItems="center">
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      Zipcode
+                    </Text>
+                    <Spacer />
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      {data.address.zipcode}
+                    </Text>
+                  </HStack>
+                  <HStack alignItems="center">
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      Latitude
+                    </Text>
+                    <Spacer />
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      {data.address.geo.lat}
+                    </Text>
+                  </HStack>
+                  <HStack alignItems="center">
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      Longitude
+                    </Text>
+                    <Spacer />
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      {data.address.geo.lng}
+                    </Text>
+                  </HStack>
+                </Box>
+
+                <Box maxW='container' rounded="lg" overflow="hidden" p={1} mt={1} borderColor="coolGray.200" borderWidth="1" _dark={{
+                  borderColor: "coolGray.600",
+                  backgroundColor: "gray.700"
+                }} _web={{
+                  shadow: 2,
+                  borderWidth: 0
+                }} _light={{
+                  backgroundColor: "gray.50"
+                }}>
+
+                  <Heading size='xs' > Company</Heading>
+                  <HStack alignItems="center">
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      Company Name
+                    </Text>
+                    <Spacer />
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      {data.company.name}
+                    </Text>
+                  </HStack>
+
+                  <HStack >
+                    <Text color="coolGray.600" _dark={{
+                      color: "warmGray.200"
+                    }} fontWeight="400">
+                      Description
+                    </Text>
+                    <Spacer />
+                    <VStack>
+                      <Text color="coolGray.600" _dark={{
+                        color: "warmGray.200"
+                      }} fontWeight="400">
+                        {data.company.catchPhrase}
+
+                      </Text>
+                      <Text color="coolGray.600" _dark={{
+                        color: "warmGray.200"
+                      }} fontWeight="400"
+                        alignSelf={'flex-end'}>
+                        {data.company.bs}
+
+                      </Text>
+                    </VStack>
+                  </HStack>
+                </Box>
+              </VStack>
+              <HStack alignItems="center" space={2}>
+                <Text color="coolGray.600" _dark={{
+                  color: "warmGray.200"
+                }} fontWeight="400">
+                  Website
+                </Text>
+                {/* <Spacer /> */}
+                <Link color="coolGray.600" _dark={{
+                  color: "warmGray.200"
+                }} fontWeight="400" >
+                  {data.website}
+                </Link>
+
+              </HStack>
+            </Stack>
+          </Box>
+        </Box>
       </ScrollView>
-      <Button
-        onPress={() => tempNavigation.navigate('login')}
-        style={{margin: 10}}>
-        Logout
-      </Button>
-    </View>
+    </View >
   );
 };
 
@@ -116,7 +299,7 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontFamily: globalColors.fontMedium,
   },
-  textphone: {fontSize: 10, color: '#8E8E8E', lineHeight: 13},
+  textphone: { fontSize: 10, color: '#8E8E8E', lineHeight: 13 },
   flexrow: {
     flexDirection: 'row',
   },

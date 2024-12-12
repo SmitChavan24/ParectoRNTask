@@ -1,0 +1,255 @@
+
+      <View style={styles.detailsContainer}>
+          <View style={styles.detailHeader}>
+            <Text>{'Personal Details'}</Text>
+          </View>
+          <View style={styles.table}>
+            <View style={styles.flexrow}>
+              <Text style={styles.labelText}>{'First Name'}</Text>
+              <Text style={styles.valueText}>{data?.firstname}</Text>
+            </View>
+            <View style={styles.flexrow}>
+              <Text style={styles.labelText}>{'Last Name'}</Text>
+              <Text style={styles.valueText}>{data?.lastname}</Text>
+            </View>
+            <View style={styles.flexrow}>
+              <Text style={styles.labelText}>{'Date of Birth'}</Text>
+              <Text style={styles.valueText}>{data?.dob}</Text>
+            </View>
+            <View style={styles.flexrow}>
+              <Text style={styles.labelText}>{'Email Id'}</Text>
+              <Text style={styles.valueText}>{data?.email}</Text>
+            </View>
+            <View style={styles.flexrow}>
+              <Text style={styles.labelText}>{'Gender'}</Text>
+              <Text style={styles.valueText}>{data?.gender}</Text>
+            </View>
+          </View>
+        </View>
+ 
+ 
+ <View
+style={{
+  width: '100%',
+  backgroundColor: 'white',
+}}>
+<View
+  style={{
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: '5%',
+    marginBottom: '2%',
+  }}>
+  <TouchableOpacity
+    style={{
+      marginHorizontal: '3%',
+    }}
+    onPress={openModal}>
+
+  </TouchableOpacity>
+  <Text
+    style={{
+      fontSize: 32,
+      fontWeight: 'bold',
+      color: 'black',
+      marginLeft: '12%',
+    }}>
+    Zatpat News
+  </Text>
+</View>
+</View>
+<View
+style={{
+  backgroundColor: 'red',
+  height: '0.7%',
+  alignSelf: 'center',
+  width: '90%',
+  borderRadius: 3,
+}}></View>
+<FlatList
+ref={flatListRef}
+data={bools.showheadlines ? News : moreNews ? moreNews : News}
+keyExtractor={(id, index) => index.toString()}
+renderItem={RenderItem}
+style={{ margin: '2%', marginBottom: '0%' }}
+onEndReached={onEndReached}
+onEndReachedThreshold={1}
+/>
+
+{bools.fetchMore && (
+<TouchableOpacity
+  style={{
+    height: 40,
+    backgroundColor: 'transparent',
+    width: '20%',
+    alignSelf: 'center',
+    margin: '1.5%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'grey',
+  }}
+  onPress={FetchMoreNews}>
+  <Text style={{ color: 'black', fontSize: 12, fontWeight: '500' }}>
+    Show More
+  </Text>
+</TouchableOpacity>
+)}
+{bools.headlines && (
+<TouchableOpacity
+  style={{
+    height: 40,
+    backgroundColor: 'transparent',
+    width: '20%',
+    alignSelf: 'center',
+    margin: '1.5%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'grey',
+  }}
+  onPress={() => {
+    setbools(prevState => ({
+      ...prevState,
+      fetchMore: false,
+      showheadlines: true,
+      headlines: false,
+    })),
+      scrollFlatListToStart();
+  }}>
+  <Text style={{ color: 'black', fontSize: 12, fontWeight: '500' }}>
+    Show Headlines
+  </Text>
+</TouchableOpacity>
+)}
+{/* <Button
+title="press"
+onPress={() => props.navigation.navigate('login')}></Button> */}
+<Modal isOpen={modalVisible} onClose={() => setModalVisible(false)}>
+<View
+  style={{
+    height: '100%',
+    width: '66%',
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#f5f5f0',
+    borderRadius: 5,
+    position: 'absolute',
+    alignSelf: 'flex-start',
+    zIndex: 999,
+    justifyContent: 'space-between',
+  }}>
+  <ScrollView showsVerticalScrollIndicator={false}>
+    <Text
+      style={{
+        alignSelf: 'center',
+        marginTop: '25%',
+        color: 'grey',
+        fontSize: 18,
+        fontWeight: '500',
+      }}>
+      {profileData.email}
+    </Text>
+    <Pressable
+      style={{
+        alignSelf: 'center',
+        marginBottom: '10%',
+        marginTop: '5%',
+        backgroundColor: 'white',
+      }}
+      onPress={pickImage}>
+
+    </Pressable>
+    <VStack space={1} alignItems="center" marginTop={'1'}>
+      <Pressable onPress={() => setshowMore(!showMore)}>
+        <Center
+          w="56"
+          h="10"
+          bg="indigo.400"
+          rounded="xs"
+          shadow={3}
+          margin={'0.5'}>
+          <Text
+            fontSize="sm"
+            style={{ color: 'black', fontSize: 17, fontWeight: '600' }}>
+            Languages
+          </Text>
+        </Center>
+      </Pressable>
+    </VStack>
+
+    {showMore &&
+      Languages.map((item, index) => (
+        <VStack space={1} alignItems="center" key={index}>
+          <Pressable
+            style={{ marginTop: '1.2%' }}
+            onPress={() => openURL(item.url)}>
+            <Center
+              w="48"
+              h="10"
+              bg="indigo.500"
+              rounded="xs"
+              shadow={3}>
+              <Text fontSize="sm" style={{ color: 'yellow' }}>
+                {item.lang}
+              </Text>
+            </Center>
+          </Pressable>
+        </VStack>
+      ))}
+    {mapData.map((item, index) => (
+      <VStack space={1} alignItems="center" marginTop={'1'} key={index}>
+        <Pressable onPress={() => openURL(item.url)}>
+          <Center
+            w="56"
+            h="10"
+            bg="indigo.400"
+            rounded="xs"
+            shadow={3}
+            margin={'0.5'}>
+            <Text
+              fontSize="sm"
+              style={{ color: 'black', fontSize: 17, fontWeight: '600' }}>
+              {item.name}
+            </Text>
+          </Center>
+        </Pressable>
+      </VStack>
+    ))}
+  </ScrollView>
+  <View
+    style={{
+      width: '100%',
+      backgroundColor: 'gray',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingBottom: '5%',
+    }}>
+    <Text style={{ color: 'black', fontSize: 32 }}>DONATE US</Text>
+
+    <TouchableOpacity onPress={() => onCopy('8104287670@ybl')}>
+      <TextInput
+        style={{ color: 'black', fontSize: 18 }}
+        value="UPI ID:- 8104287670@ybl"
+        editable={false}></TextInput>
+    </TouchableOpacity>
+    <TouchableOpacity onPress={() => onCopy('8104287670')}>
+      <Text style={{ color: 'black', fontSize: 18 }}>
+        {'Mobile Number:- 8104287670'}
+      </Text>
+    </TouchableOpacity>
+  </View>
+</View>
+</Modal>
+<AnimatedLoader
+visible={apiError?.bool && isConnected}
+overlayColor="transparent"
+source={require('../../assets/somethingStrange.json')}
+animationStyle={styles.lottie}
+speed={0.3}>
+<Text style={{ color: 'black', fontSize: 20, fontWeight: '600' }}>
+  Terminate App and Open it Again
+</Text>
+</AnimatedLoader> 
