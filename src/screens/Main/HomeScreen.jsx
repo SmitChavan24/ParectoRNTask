@@ -140,16 +140,16 @@ const HomeScreen = props => {
                 {item.id}
               </Badge>
               <Spacer />
-              <Text fontSize={10} color="coolGray.800">
+              <Text fontSize={10} color="warmGray.800">
                 {item.name}
               </Text>
             </HStack>
             <HStack alignItems="center" marginTop={2}>
-              <Text color="coolGray.800" mt="5" fontWeight="medium" fontSize="xl" >
+              <Text color="warmGray.800" mt="5" fontWeight="medium" fontSize="xl" >
                 Email Id
               </Text>
               <Spacer />
-              <Text color="coolGray.800" mt="5" fontWeight="medium" fontSize="xl" >
+              <Text color="warmGray.800" mt="5" fontWeight="medium" fontSize="xl" >
                 {item.email}
               </Text>
             </HStack>
